@@ -4,7 +4,7 @@
 CREATE TYPE telemetry_source AS ENUM ('snmp', 'arp', 'mac_table', 'netflow', 'syslog', 'routing', 'manual');
 
 CREATE TABLE telemetry (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID DEFAULT uuid_generate_v4(),
   source telemetry_source NOT NULL,
   device_id UUID REFERENCES devices(id) ON DELETE SET NULL,
   timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -12,7 +12,8 @@ CREATE TABLE telemetry (
   raw_data TEXT,
   processed BOOLEAN NOT NULL DEFAULT false,
   metadata JSONB DEFAULT '{}',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id, timestamp)
 ) PARTITION BY RANGE (timestamp);
 
 -- Create partitions for recent data (last 90 days monthly)

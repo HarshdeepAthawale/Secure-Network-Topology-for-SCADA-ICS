@@ -175,11 +175,7 @@ resource "aws_lambda_permission" "iot" {
   source_arn    = var.iot_rule_arn
 }
 
-# Create placeholder zip
-resource "local_file" "placeholder" {
-  content  = "placeholder"
-  filename = "${path.module}/placeholder.zip"
-}
+# Placeholder zip is pre-created manually
 
 variable "name_prefix" { type = string }
 variable "environment" { type = string }

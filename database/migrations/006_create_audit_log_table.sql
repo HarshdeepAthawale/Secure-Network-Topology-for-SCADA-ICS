@@ -2,7 +2,7 @@
 -- Description: Create audit log table for compliance
 
 CREATE TABLE audit_log (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID DEFAULT uuid_generate_v4(),
   timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   action VARCHAR(100) NOT NULL,
   entity_type VARCHAR(50) NOT NULL,
@@ -11,7 +11,8 @@ CREATE TABLE audit_log (
   ip_address INET,
   user_agent TEXT,
   changes JSONB,
-  metadata JSONB DEFAULT '{}'
+  metadata JSONB DEFAULT '{}',
+  PRIMARY KEY (id, timestamp)
 ) PARTITION BY RANGE (timestamp);
 
 CREATE TABLE audit_log_current PARTITION OF audit_log
