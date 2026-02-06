@@ -176,6 +176,8 @@ export enum TelemetrySource {
   NETFLOW = 'netflow',
   SYSLOG = 'syslog',
   ROUTING = 'routing',
+  OPCUA = 'opcua',
+  MODBUS = 'modbus',
   MANUAL = 'manual',
 }
 
@@ -321,6 +323,14 @@ export enum AlertType {
   COMPLIANCE = 'compliance',
   PERFORMANCE = 'performance',
   CONFIGURATION = 'configuration',
+  // Additional specific alert types
+  DEVICE_OFFLINE = 'device_offline',
+  SECURITY_VIOLATION = 'security_violation',
+  INSECURE_PROTOCOL = 'insecure_protocol',
+  NEW_DEVICE = 'new_device',
+  CONFIGURATION_CHANGE = 'configuration_change',
+  CROSS_ZONE_CONNECTION = 'cross_zone_connection',
+  FIRMWARE_OUTDATED = 'firmware_outdated',
 }
 
 export interface Alert {
@@ -337,6 +347,7 @@ export interface Alert {
   acknowledgedBy?: string;
   acknowledgedAt?: Date;
   resolved: boolean;
+  resolvedBy?: string;
   resolvedAt?: Date;
   createdAt: Date;
 }

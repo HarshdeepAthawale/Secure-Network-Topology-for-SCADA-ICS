@@ -3,9 +3,16 @@
  */
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda';
-import { Device, Connection, TopologySnapshot, Alert, PurdueLevel } from '../../utils/types';
+import { Device, Connection, TopologySnapshot, Alert, PurdueLevel, SecurityZone, DeviceStatus } from '../../utils/types';
 import { logger } from '../../utils/logger';
 import { generateUUID } from '../../utils/crypto';
+import {
+  initializeDatabase,
+  getDeviceRepository,
+  getConnectionRepository,
+  getAlertRepository,
+  getTopologySnapshotRepository,
+} from '../../database';
 
 interface QueryParams {
   deviceId?: string;
@@ -56,90 +63,123 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
 };
 
 async function getTopology(params: QueryParams): Promise<APIGatewayProxyResult> {
-  // Placeholder - would query database
-  const snapshot: Partial<TopologySnapshot> = {
-    id: generateUUID(),
-    timestamp: new Date(),
-    devices: [],
-    connections: [],
-    zones: [],
-    metadata: {
-      deviceCount: 0,
-      connectionCount: 0,
-      collectionDuration: 0,
-      sources: [],
-    },
-  };
+  await initializeDatabase();
+  const snapshotRepo = getTopologySnapshotRepository();
+
+  // Get the latest topology snapshot
+  const snapshot = await snapshotRepo.getLatest();
+
+  if (!snapshot) {
+    // If no snapshot exists, return empty topology
+    return success({
+      id: generateUUID(),
+      timestamp: new Date(),
+      devices: [],
+      connections: [],
+      zones: [],
+      metadata: {
+        deviceCount: 0,
+        connectionCount: 0,
+        collectionDuration: 0,
+        sources: [],
+      },
+    });
+  }
 
   return success(snapshot);
 }
 
 async function getDevice(deviceId: string): Promise<APIGatewayProxyResult> {
-  // Placeholder - would query database
+  await initializeDatabase();
+  const deviceRepo = getDeviceRepository();
+
   logger.info('Getting device', { deviceId });
 
-  // Simulated response
-  return notFound(`Device ${deviceId} not found`);
+  const device = await deviceRepo.findByIdWithInterfaces(deviceId);
+
+  if (!device) {
+    return notFound(`Device ${deviceId} not found`);
+  }
+
+  return success(device);
 }
 
 async function listDevices(params: QueryParams): Promise<APIGatewayProxyResult> {
+  await initializeDatabase();
+  const deviceRepo = getDeviceRepository();
+
   const limit = parseInt(params.limit || '50', 10);
   const offset = parseInt(params.offset || '0', 10);
+  const page = Math.floor(offset / limit) + 1;
   const level = params.level ? parseInt(params.level, 10) as PurdueLevel : undefined;
+  const zone = params.zone as SecurityZone | undefined;
+  const status = params.status as DeviceStatus | undefined;
 
-  logger.info('Listing devices', { limit, offset, level });
+  logger.info('Listing devices', { limit, offset, level, zone, status });
 
-  // Placeholder - would query database
-  const devices: Device[] = [];
+  const result = await deviceRepo.search({
+    purdueLevel: level,
+    securityZone: zone,
+    status,
+  }, page, limit);
 
   return success({
-    data: devices,
+    data: result.data,
     pagination: {
       limit,
       offset,
-      total: 0,
-      hasMore: false,
+      total: result.pagination.total,
+      hasMore: result.pagination.hasNext,
     },
   });
 }
 
 async function listConnections(params: QueryParams): Promise<APIGatewayProxyResult> {
+  await initializeDatabase();
+  const connectionRepo = getConnectionRepository();
+
   const limit = parseInt(params.limit || '100', 10);
   const offset = parseInt(params.offset || '0', 10);
+  const page = Math.floor(offset / limit) + 1;
 
   logger.info('Listing connections', { limit, offset });
 
-  // Placeholder - would query database
-  const connections: Connection[] = [];
+  const result = await connectionRepo.search({}, page, limit);
 
   return success({
-    data: connections,
+    data: result.data,
     pagination: {
       limit,
       offset,
-      total: 0,
-      hasMore: false,
+      total: result.pagination.total,
+      hasMore: result.pagination.hasNext,
     },
   });
 }
 
 async function listAlerts(params: QueryParams): Promise<APIGatewayProxyResult> {
+  await initializeDatabase();
+  const alertRepo = getAlertRepository();
+
   const limit = parseInt(params.limit || '50', 10);
   const offset = parseInt(params.offset || '0', 10);
+  const page = Math.floor(offset / limit) + 1;
   const status = params.status || 'active';
+  const resolved = status === 'resolved';
 
   logger.info('Listing alerts', { limit, offset, status });
 
-  // Placeholder - would query database
-  const alerts: Alert[] = [];
+  const result = await alertRepo.search({
+    resolved,
+  }, page, limit);
 
   return success({
-    data: alerts,
+    data: result.data,
     pagination: {
       limit,
       offset,
-      total: 0,
-      hasMore: false,
+      total: result.pagination.total,
+      hasMore: result.pagination.hasNext,
     },
   });
 }

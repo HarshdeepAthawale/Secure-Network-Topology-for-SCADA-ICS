@@ -14,6 +14,13 @@ import { deviceCorrelator, DeviceCandidate } from '../../processors/correlation/
 import { topologyBuilder } from '../../processors/correlation/topology-builder';
 import { purdueClassifier } from '../../processors/classification/purdue-classifier';
 import { riskAnalyzer } from '../../processors/risk/risk-analyzer';
+import {
+  initializeDatabase,
+  getDeviceRepository,
+  getConnectionRepository,
+  getAlertRepository,
+  getTopologySnapshotRepository,
+} from '../../database';
 
 interface ProcessingResult {
   batchId: string;
@@ -188,13 +195,106 @@ function processTelemetry(telemetry: TelemetryData): { candidates: DeviceCandida
 }
 
 async function storeAlerts(alerts: Alert[]): Promise<void> {
-  logger.info('Storing alerts', { count: alerts.length });
-  // Placeholder for database storage
-  // await db.alerts.insertMany(alerts);
+  if (alerts.length === 0) return;
+
+  try {
+    await initializeDatabase();
+    const alertRepo = getAlertRepository();
+
+    for (const alert of alerts) {
+      await alertRepo.create({
+        id: alert.id,
+        type: alert.type,
+        severity: alert.severity,
+        title: alert.title,
+        description: alert.description,
+        deviceId: alert.deviceId,
+        connectionId: alert.connectionId,
+        details: alert.details,
+        remediation: alert.remediation,
+      });
+    }
+
+    logger.info('Alerts stored successfully', { count: alerts.length });
+  } catch (error) {
+    logger.error('Failed to store alerts', {
+      count: alerts.length,
+      error: (error as Error).message
+    });
+    throw error;
+  }
 }
 
 async function storeTopologySnapshot(snapshot: unknown): Promise<void> {
-  logger.info('Storing topology snapshot');
-  // Placeholder for S3/database storage
-  // await s3.putObject({ ... });
+  try {
+    await initializeDatabase();
+    const snapshotRepo = getTopologySnapshotRepository();
+    const typedSnapshot = snapshot as {
+      id: string;
+      devices: Device[];
+      connections: Connection[];
+      zones: unknown[];
+      metadata: {
+        deviceCount: number;
+        connectionCount: number;
+        collectionDuration: number;
+        sources: TelemetrySource[];
+      };
+    };
+
+    await snapshotRepo.createSnapshot({
+      id: typedSnapshot.id,
+      timestamp: new Date(),
+      devices: typedSnapshot.devices,
+      connections: typedSnapshot.connections,
+      zones: typedSnapshot.zones as any,
+      metadata: typedSnapshot.metadata,
+    });
+
+    logger.info('Topology snapshot stored successfully', {
+      id: typedSnapshot.id,
+      devices: typedSnapshot.metadata.deviceCount,
+      connections: typedSnapshot.metadata.connectionCount,
+    });
+  } catch (error) {
+    logger.error('Failed to store topology snapshot', {
+      error: (error as Error).message
+    });
+    throw error;
+  }
 }
+
+async function storeDevice(device: Device): Promise<void> {
+  try {
+    await initializeDatabase();
+    const deviceRepo = getDeviceRepository();
+
+    await deviceRepo.upsertByIdentifier({
+      id: device.id,
+      name: device.name,
+      hostname: device.hostname,
+      type: device.type,
+      vendor: device.vendor,
+      model: device.model,
+      firmwareVersion: device.firmwareVersion,
+      serialNumber: device.serialNumber,
+      purdueLevel: device.purdueLevel,
+      securityZone: device.securityZone,
+      status: device.status,
+      interfaces: device.interfaces,
+      location: device.location as Record<string, unknown> | undefined,
+      metadata: device.metadata,
+      discoveredAt: device.discoveredAt,
+      lastSeenAt: device.lastSeenAt,
+    }, 'hostname');
+
+    logger.debug('Device stored', { id: device.id, name: device.name });
+  } catch (error) {
+    logger.error('Failed to store device', {
+      id: device.id,
+      error: (error as Error).message
+    });
+    throw error;
+  }
+}
+

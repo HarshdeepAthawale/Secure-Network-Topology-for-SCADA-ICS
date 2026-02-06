@@ -8,6 +8,8 @@ import { ARPCollector, createARPCollector } from './arp-collector';
 import { NetFlowCollector, createNetFlowCollector } from './netflow-collector';
 import { SyslogCollector, createSyslogCollector } from './syslog-collector';
 import { RoutingCollector, createRoutingCollector } from './routing-collector';
+import { OPCUACollector, createOPCUACollector } from './opcua-collector';
+import { ModbusCollector, createModbusCollector } from './modbus-collector';
 import { BaseCollector, CollectorStatus } from './base-collector';
 import { TelemetrySource, CollectorConfig } from '../utils/types';
 import { logger } from '../utils/logger';
@@ -31,6 +33,8 @@ export interface CollectorManagerConfig {
   netflow?: Partial<CollectorConfig> & { enabled?: boolean };
   syslog?: Partial<CollectorConfig> & { enabled?: boolean };
   routing?: Partial<CollectorConfig> & { enabled?: boolean };
+  opcua?: Partial<CollectorConfig> & { enabled?: boolean };
+  modbus?: Partial<CollectorConfig> & { enabled?: boolean };
 }
 
 // ============================================================================
@@ -77,6 +81,18 @@ export class CollectorManager extends EventEmitter {
       const routingCollector = createRoutingCollector(managerConfig.routing);
       this.collectors.set(TelemetrySource.ROUTING, routingCollector);
       this.setupCollectorEvents(routingCollector);
+    }
+
+    if (managerConfig.opcua?.enabled !== false) {
+      const opcuaCollector = createOPCUACollector(managerConfig.opcua);
+      this.collectors.set(TelemetrySource.OPCUA, opcuaCollector);
+      this.setupCollectorEvents(opcuaCollector);
+    }
+
+    if (managerConfig.modbus?.enabled !== false) {
+      const modbusCollector = createModbusCollector(managerConfig.modbus);
+      this.collectors.set(TelemetrySource.MODBUS, modbusCollector);
+      this.setupCollectorEvents(modbusCollector);
     }
 
     logger.info('Collectors initialized', {
@@ -175,6 +191,8 @@ export class CollectorManager extends EventEmitter {
   get netflow(): NetFlowCollector | undefined { return this.getCollector<NetFlowCollector>(TelemetrySource.NETFLOW); }
   get syslog(): SyslogCollector | undefined { return this.getCollector<SyslogCollector>(TelemetrySource.SYSLOG); }
   get routing(): RoutingCollector | undefined { return this.getCollector<RoutingCollector>(TelemetrySource.ROUTING); }
+  get opcua(): OPCUACollector | undefined { return this.getCollector<OPCUACollector>(TelemetrySource.OPCUA); }
+  get modbus(): ModbusCollector | undefined { return this.getCollector<ModbusCollector>(TelemetrySource.MODBUS); }
 
   getCollectorStatuses(): CollectorStatus[] {
     return Array.from(this.collectors.values()).map(c => c.getStatus());
@@ -210,7 +228,7 @@ export function getCollectorManager(cfg?: CollectorManagerConfig): CollectorMana
 
 export function resetCollectorManager(): void {
   if (managerInstance) {
-    managerInstance.stop().catch(() => {});
+    managerInstance.stop().catch(() => { });
     managerInstance = null;
   }
 }

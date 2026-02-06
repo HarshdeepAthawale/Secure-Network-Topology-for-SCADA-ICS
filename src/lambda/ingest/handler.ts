@@ -7,6 +7,7 @@ import { TelemetryData, TelemetrySource } from '../../utils/types';
 import { logger } from '../../utils/logger';
 import { generateUUID } from '../../utils/crypto';
 import { telemetryDataSchema, safeValidate, formatValidationErrors } from '../../utils/validators';
+import { initializeDatabase, getTelemetryRepository, closeDatabase } from '../../database';
 
 interface IoTTelemetryPayload {
   collector: string;
@@ -105,11 +106,29 @@ function enrichTelemetry(item: TelemetryData, payload: IoTTelemetryPayload): Tel
 }
 
 async function storeTelemetry(item: TelemetryData): Promise<void> {
-  // In production, this would store to RDS/DynamoDB/S3
-  logger.debug('Storing telemetry', { id: item.id, source: item.source });
+  try {
+    await initializeDatabase();
+    const telemetryRepo = getTelemetryRepository();
 
-  // Placeholder for database storage
-  // await db.telemetry.insert(item);
+    await telemetryRepo.insertTelemetry({
+      id: item.id,
+      source: item.source,
+      deviceId: item.deviceId,
+      timestamp: item.timestamp,
+      data: item.data,
+      raw: item.raw,
+      processed: false,
+      metadata: item.metadata,
+    });
+
+    logger.debug('Telemetry stored successfully', { id: item.id, source: item.source });
+  } catch (error) {
+    logger.error('Failed to store telemetry', {
+      id: item.id,
+      error: (error as Error).message
+    });
+    throw error;
+  }
 }
 
 export async function validateTelemetry(data: unknown): Promise<{ valid: boolean; errors?: string[] }> {
