@@ -1,0 +1,114 @@
+{
+  "dashboard": {
+    "title": "SCADA Topology Overview",
+    "uid": "scada-topology-overview",
+    "tags": ["scada", "topology", "ot-security"],
+    "timezone": "browser",
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Device Count by Purdue Level",
+        "type": "piechart",
+        "gridPos": { "x": 0, "y": 0, "w": 8, "h": 8 },
+        "datasource": "PostgreSQL",
+        "targets": [{
+          "rawSql": "SELECT purdue_level as label, COUNT(*) as value FROM devices GROUP BY purdue_level",
+          "format": "table"
+        }]
+      },
+      {
+        "id": 2,
+        "title": "Device Status",
+        "type": "stat",
+        "gridPos": { "x": 8, "y": 0, "w": 8, "h": 4 },
+        "datasource": "PostgreSQL",
+        "targets": [{
+          "rawSql": "SELECT status, COUNT(*) as count FROM devices GROUP BY status",
+          "format": "table"
+        }],
+        "options": {
+          "colorMode": "background",
+          "graphMode": "none"
+        }
+      },
+      {
+        "id": 3,
+        "title": "Active Alerts",
+        "type": "stat",
+        "gridPos": { "x": 16, "y": 0, "w": 8, "h": 4 },
+        "datasource": "PostgreSQL",
+        "targets": [{
+          "rawSql": "SELECT severity, COUNT(*) FROM alerts WHERE resolved = false GROUP BY severity",
+          "format": "table"
+        }],
+        "options": {
+          "colorMode": "value"
+        }
+      },
+      {
+        "id": 4,
+        "title": "Network Topology",
+        "type": "nodeGraph",
+        "gridPos": { "x": 0, "y": 8, "w": 16, "h": 12 },
+        "datasource": "PostgreSQL",
+        "targets": [
+          {
+            "rawSql": "SELECT id, name as title, type as subtitle, purdue_level::text as mainstat FROM devices",
+            "format": "table",
+            "refId": "nodes"
+          },
+          {
+            "rawSql": "SELECT id, source_device_id as source, target_device_id as target FROM connections",
+            "format": "table",
+            "refId": "edges"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Recent Alerts",
+        "type": "table",
+        "gridPos": { "x": 16, "y": 4, "w": 8, "h": 16 },
+        "datasource": "PostgreSQL",
+        "targets": [{
+          "rawSql": "SELECT created_at, severity, title, device_id FROM alerts WHERE resolved = false ORDER BY created_at DESC LIMIT 20",
+          "format": "table"
+        }]
+      },
+      {
+        "id": 6,
+        "title": "Telemetry Rate",
+        "type": "timeseries",
+        "gridPos": { "x": 0, "y": 20, "w": 12, "h": 8 },
+        "datasource": "PostgreSQL",
+        "targets": [{
+          "rawSql": "SELECT date_trunc('minute', timestamp) as time, source, COUNT(*) as count FROM telemetry WHERE timestamp > NOW() - INTERVAL '1 hour' GROUP BY 1, 2 ORDER BY 1",
+          "format": "time_series"
+        }]
+      },
+      {
+        "id": 7,
+        "title": "Connection Security",
+        "type": "piechart",
+        "gridPos": { "x": 12, "y": 20, "w": 6, "h": 8 },
+        "datasource": "PostgreSQL",
+        "targets": [{
+          "rawSql": "SELECT CASE WHEN is_secure THEN 'Secure' ELSE 'Insecure' END as label, COUNT(*) as value FROM connections GROUP BY is_secure",
+          "format": "table"
+        }]
+      },
+      {
+        "id": 8,
+        "title": "Top Vendors",
+        "type": "bargauge",
+        "gridPos": { "x": 18, "y": 20, "w": 6, "h": 8 },
+        "datasource": "PostgreSQL",
+        "targets": [{
+          "rawSql": "SELECT COALESCE(vendor, 'Unknown') as vendor, COUNT(*) as count FROM devices GROUP BY vendor ORDER BY count DESC LIMIT 10",
+          "format": "table"
+        }]
+      }
+    ]
+  }
+}

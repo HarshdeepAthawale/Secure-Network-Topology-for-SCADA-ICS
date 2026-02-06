@@ -1,0 +1,103 @@
+{
+  "dashboard": {
+    "title": "Security Alerts Dashboard",
+    "uid": "scada-security-alerts",
+    "tags": ["scada", "security", "alerts"],
+    "timezone": "browser",
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Critical Alerts",
+        "type": "stat",
+        "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+        "datasource": "PostgreSQL",
+        "targets": [{
+          "rawSql": "SELECT COUNT(*) as value FROM alerts WHERE severity = 'critical' AND resolved = false",
+          "format": "table"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "thresholds" },
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "red", "value": 1 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "High Alerts",
+        "type": "stat",
+        "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+        "datasource": "PostgreSQL",
+        "targets": [{
+          "rawSql": "SELECT COUNT(*) as value FROM alerts WHERE severity = 'high' AND resolved = false",
+          "format": "table"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "thresholds" },
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "orange", "value": 1 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Alert Trend (24h)",
+        "type": "timeseries",
+        "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+        "datasource": "PostgreSQL",
+        "targets": [{
+          "rawSql": "SELECT date_trunc('hour', created_at) as time, severity, COUNT(*) as count FROM alerts WHERE created_at > NOW() - INTERVAL '24 hours' GROUP BY 1, 2 ORDER BY 1",
+          "format": "time_series"
+        }]
+      },
+      {
+        "id": 4,
+        "title": "Alerts by Type",
+        "type": "piechart",
+        "gridPos": { "x": 0, "y": 4, "w": 6, "h": 8 },
+        "datasource": "PostgreSQL",
+        "targets": [{
+          "rawSql": "SELECT type as label, COUNT(*) as value FROM alerts WHERE resolved = false GROUP BY type",
+          "format": "table"
+        }]
+      },
+      {
+        "id": 5,
+        "title": "Affected Devices",
+        "type": "bargauge",
+        "gridPos": { "x": 6, "y": 4, "w": 6, "h": 8 },
+        "datasource": "PostgreSQL",
+        "targets": [{
+          "rawSql": "SELECT d.name, COUNT(a.id) as alerts FROM alerts a JOIN devices d ON a.device_id = d.id WHERE a.resolved = false GROUP BY d.name ORDER BY alerts DESC LIMIT 10",
+          "format": "table"
+        }]
+      },
+      {
+        "id": 6,
+        "title": "Active Alerts List",
+        "type": "table",
+        "gridPos": { "x": 0, "y": 12, "w": 24, "h": 10 },
+        "datasource": "PostgreSQL",
+        "targets": [{
+          "rawSql": "SELECT a.created_at, a.severity, a.type, a.title, a.description, d.name as device, a.acknowledged FROM alerts a LEFT JOIN devices d ON a.device_id = d.id WHERE a.resolved = false ORDER BY CASE a.severity WHEN 'critical' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END, a.created_at DESC",
+          "format": "table"
+        }],
+        "options": {
+          "showHeader": true,
+          "sortBy": [{ "displayName": "created_at", "desc": true }]
+        }
+      }
+    ]
+  }
+}

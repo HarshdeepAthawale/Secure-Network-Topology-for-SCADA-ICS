@@ -1,0 +1,68 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build output
+dist/
+*.js.map
+*.d.ts.map
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Certificates and keys (NEVER commit these)
+certs/
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# AWS credentials
+.aws/
+
+# Terraform
+infrastructure/.terraform/
+infrastructure/*.tfstate
+infrastructure/*.tfstate.backup
+infrastructure/*.tfvars
+infrastructure/.terraform.lock.hcl
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Database
+*.sql.backup
+
+# Secrets
+secrets/
+*.secret
+
+# Debug
+debug/
+
+# Lambda packages
+*.zip

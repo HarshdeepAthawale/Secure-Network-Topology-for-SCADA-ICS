@@ -1,0 +1,145 @@
+# IoT Core Module
+
+data "aws_iot_endpoint" "main" {
+  endpoint_type = "iot:Data-ATS"
+}
+
+resource "aws_iot_thing" "collector" {
+  name = "${var.name_prefix}-collector"
+}
+
+resource "aws_iot_certificate" "collector" {
+  active = true
+}
+
+resource "aws_iot_thing_principal_attachment" "collector" {
+  thing     = aws_iot_thing.collector.name
+  principal = aws_iot_certificate.collector.arn
+}
+
+resource "aws_iot_policy" "collector" {
+  name = "${var.name_prefix}-collector-policy"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["iot:Connect"]
+        Resource = "arn:aws:iot:*:*:client/${var.name_prefix}-*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["iot:Publish"]
+        Resource = [
+          "arn:aws:iot:*:*:topic/scada/telemetry",
+          "arn:aws:iot:*:*:topic/scada/alerts"
+        ]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["iot:Subscribe"]
+        Resource = "arn:aws:iot:*:*:topicfilter/scada/commands/*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["iot:Receive"]
+        Resource = "arn:aws:iot:*:*:topic/scada/commands/*"
+      }
+    ]
+  })
+}
+
+resource "aws_iot_policy_attachment" "collector" {
+  policy = aws_iot_policy.collector.name
+  target = aws_iot_certificate.collector.arn
+}
+
+resource "aws_iot_topic_rule" "telemetry" {
+  name        = "${replace(var.name_prefix, "-", "_")}_telemetry"
+  enabled     = true
+  sql         = "SELECT * FROM 'scada/telemetry'"
+  sql_version = "2016-03-23"
+
+  lambda {
+    function_arn = var.lambda_function_arn != "" ? var.lambda_function_arn : "arn:aws:lambda:us-east-1:000000000000:function:placeholder"
+  }
+
+  cloudwatch_logs {
+    log_group_name = "/aws/iot/${var.name_prefix}/telemetry"
+    role_arn       = aws_iam_role.iot_logging.arn
+  }
+
+  error_action {
+    cloudwatch_logs {
+      log_group_name = "/aws/iot/${var.name_prefix}/errors"
+      role_arn       = aws_iam_role.iot_logging.arn
+    }
+  }
+}
+
+resource "aws_iam_role" "iot_logging" {
+  name = "${var.name_prefix}-iot-logging"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "iot.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "iot_logging" {
+  name = "cloudwatch-logs"
+  role = aws_iam_role.iot_logging.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["logs:CreateLogStream", "logs:PutLogEvents"]
+      Resource = "arn:aws:logs:*:*:log-group:/aws/iot/${var.name_prefix}/*"
+    }]
+  })
+}
+
+variable "name_prefix" {
+  type = string
+}
+
+variable "environment" {
+  type = string
+}
+
+variable "lambda_function_arn" {
+  type    = string
+  default = ""
+}
+
+output "iot_endpoint" {
+  value = data.aws_iot_endpoint.main.endpoint_address
+}
+
+output "thing_name" {
+  value = aws_iot_thing.collector.name
+}
+
+output "certificate_arn" {
+  value = aws_iot_certificate.collector.arn
+}
+
+output "certificate_pem" {
+  value     = aws_iot_certificate.collector.certificate_pem
+  sensitive = true
+}
+
+output "private_key" {
+  value     = aws_iot_certificate.collector.private_key
+  sensitive = true
+}
+
+output "telemetry_rule_arn" {
+  value = aws_iot_topic_rule.telemetry.arn
+}

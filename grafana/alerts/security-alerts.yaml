@@ -1,0 +1,151 @@
+# Grafana Alert Rules for SCADA Topology Discovery
+
+apiVersion: 1
+
+groups:
+  - name: scada-security-alerts
+    folder: SCADA
+    interval: 1m
+    rules:
+      - uid: critical-alert-threshold
+        title: Critical Security Alerts
+        condition: A
+        data:
+          - refId: A
+            datasourceUid: postgres
+            model:
+              rawSql: "SELECT COUNT(*) as value FROM alerts WHERE severity = 'critical' AND resolved = false AND created_at > NOW() - INTERVAL '5 minutes'"
+        for: 0m
+        annotations:
+          summary: Critical security alert detected
+          description: "{{ $values.A }} critical alerts in the last 5 minutes"
+        labels:
+          severity: critical
+          team: security
+        noDataState: NoData
+        execErrState: Error
+
+      - uid: high-alert-threshold
+        title: High Security Alert Rate
+        condition: A
+        data:
+          - refId: A
+            datasourceUid: postgres
+            model:
+              rawSql: "SELECT COUNT(*) as value FROM alerts WHERE severity IN ('critical', 'high') AND resolved = false AND created_at > NOW() - INTERVAL '1 hour'"
+        for: 5m
+        annotations:
+          summary: High rate of security alerts
+          description: "{{ $values.A }} high/critical alerts in the last hour"
+        labels:
+          severity: high
+          team: security
+
+      - uid: device-offline
+        title: Device Offline
+        condition: A
+        data:
+          - refId: A
+            datasourceUid: postgres
+            model:
+              rawSql: "SELECT COUNT(*) as value FROM devices WHERE status = 'offline' AND last_seen_at < NOW() - INTERVAL '5 minutes'"
+        for: 5m
+        annotations:
+          summary: Devices have gone offline
+          description: "{{ $values.A }} devices are currently offline"
+        labels:
+          severity: warning
+          team: operations
+
+      - uid: insecure-connections
+        title: Insecure Connection Detected
+        condition: A
+        data:
+          - refId: A
+            datasourceUid: postgres
+            model:
+              rawSql: "SELECT COUNT(*) as value FROM connections c JOIN devices d ON c.source_device_id = d.id WHERE c.is_secure = false AND d.purdue_level IN ('0', '1', '2') AND c.last_seen_at > NOW() - INTERVAL '10 minutes'"
+        for: 0m
+        annotations:
+          summary: Insecure connection in OT zone
+          description: "{{ $values.A }} insecure connections detected in OT zones"
+        labels:
+          severity: high
+          team: security
+
+      - uid: cross-zone-violation
+        title: Cross-Zone Communication Violation
+        condition: A
+        data:
+          - refId: A
+            datasourceUid: postgres
+            model:
+              rawSql: |
+                SELECT COUNT(*) as value FROM connections c
+                JOIN devices d1 ON c.source_device_id = d1.id
+                JOIN devices d2 ON c.target_device_id = d2.id
+                WHERE ABS(d1.purdue_level::int - d2.purdue_level::int) > 1
+                AND d1.purdue_level != '99' AND d2.purdue_level != '99'
+                AND c.last_seen_at > NOW() - INTERVAL '10 minutes'
+        for: 0m
+        annotations:
+          summary: Cross-zone communication detected
+          description: "{{ $values.A }} connections violating zone separation"
+        labels:
+          severity: critical
+          team: security
+
+      - uid: telemetry-gap
+        title: Telemetry Collection Gap
+        condition: A
+        data:
+          - refId: A
+            datasourceUid: postgres
+            model:
+              rawSql: "SELECT EXTRACT(EPOCH FROM (NOW() - MAX(timestamp))) as value FROM telemetry"
+        for: 5m
+        annotations:
+          summary: No telemetry received
+          description: "No telemetry data received for {{ $values.A }} seconds"
+        labels:
+          severity: warning
+          team: operations
+
+  - name: scada-compliance-alerts
+    folder: SCADA
+    interval: 1h
+    rules:
+      - uid: unclassified-devices
+        title: Unclassified Devices
+        condition: A
+        data:
+          - refId: A
+            datasourceUid: postgres
+            model:
+              rawSql: "SELECT COUNT(*) as value FROM devices WHERE type = 'unknown' OR vendor IS NULL"
+        for: 0m
+        annotations:
+          summary: Devices missing classification
+          description: "{{ $values.A }} devices need classification for compliance"
+        labels:
+          severity: low
+          team: compliance
+
+      - uid: missing-risk-assessment
+        title: Missing Risk Assessments
+        condition: A
+        data:
+          - refId: A
+            datasourceUid: postgres
+            model:
+              rawSql: |
+                SELECT COUNT(*) as value FROM devices d
+                LEFT JOIN risk_assessments r ON d.id = r.device_id
+                WHERE r.id IS NULL OR r.assessed_at < NOW() - INTERVAL '7 days'
+        for: 0m
+        annotations:
+          summary: Devices need risk assessment
+          description: "{{ $values.A }} devices have outdated or missing risk assessments"
+        labels:
+          severity: medium
+          team: compliance
