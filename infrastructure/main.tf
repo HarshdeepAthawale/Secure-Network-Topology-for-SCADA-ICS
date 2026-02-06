@@ -15,17 +15,13 @@ terraform {
   }
 
   # S3 Backend for Remote State Management
-  # STEP 1: Run ./scripts/bootstrap-infrastructure.sh first to create the bucket
-  # STEP 2: Uncomment the backend block below and update YOUR_ACCOUNT_ID
-  # STEP 3: Run: terraform init -migrate-state
-  #
-  # backend "s3" {
-  #   bucket         = "scada-topology-terraform-state-YOUR_ACCOUNT_ID"
-  #   key            = "infrastructure/terraform.tfstate"
-  #   region         = "ap-south-1"
-  #   encrypt        = true
-  #   dynamodb_table = "terraform-state-lock"
-  # }
+  backend "s3" {
+    bucket         = "scada-topology-terraform-state-047385030558"
+    key            = "infrastructure/terraform.tfstate"
+    region         = "ap-south-1"
+    encrypt        = true
+    dynamodb_table = "terraform-state-lock"
+  }
 }
 
 provider "aws" {

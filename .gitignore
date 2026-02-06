@@ -49,6 +49,12 @@ infrastructure/*.tfstate.backup
 infrastructure/*.tfvars
 infrastructure/.terraform.lock.hcl
 
+# Terraform Bootstrap (contains AWS account info)
+infrastructure/bootstrap/.terraform/
+infrastructure/bootstrap/*.tfstate
+infrastructure/bootstrap/*.tfstate.backup
+infrastructure/bootstrap/.terraform.lock.hcl
+
 # Temporary files
 tmp/
 temp/
