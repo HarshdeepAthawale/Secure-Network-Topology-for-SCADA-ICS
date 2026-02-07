@@ -38,9 +38,9 @@
         "x": 0,
         "y": 0
       },
-      "id": 14,
+      "id": 20,
       "options": {
-        "text": "Security Alerts & Response Timeline"
+        "text": "Security Zone Overview & Purdue Model"
       },
       "pluginVersion": "10.2.0",
       "targets": [],
@@ -55,458 +55,36 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "palette-classic"
           },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 1
-              }
-            ]
-          }
+          "custom": {
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": []
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
-        "w": 6,
+        "h": 8,
+        "w": 8,
         "x": 0,
         "y": 1
       },
       "id": 1,
       "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "values": false,
-          "fields": "",
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "postgres"
-          },
-          "format": "table",
-          "group": [],
-          "metricColumn": "none",
-          "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) as value FROM alerts WHERE severity = 'critical' AND resolved = false",
-          "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "alerts",
-          "timeColumn": "created_at",
-          "where": []
-        }
-      ],
-      "title": "Critical Alerts",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "postgres"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "orange",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 1
-      },
-      "id": 2,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "values": false,
-          "fields": "",
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "postgres"
-          },
-          "format": "table",
-          "group": [],
-          "metricColumn": "none",
-          "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) as value FROM alerts WHERE severity = 'high' AND resolved = false",
-          "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "alerts",
-          "timeColumn": "created_at",
-          "where": []
-        }
-      ],
-      "title": "High Alerts",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "postgres"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 12,
-        "y": 1
-      },
-      "id": 11,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "values": false,
-          "fields": "",
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "postgres"
-          },
-          "format": "table",
-          "group": [],
-          "metricColumn": "none",
-          "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) as value FROM alerts WHERE severity = 'medium' AND resolved = false",
-          "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "alerts",
-          "timeColumn": "created_at",
-          "where": []
-        }
-      ],
-      "title": "Medium Alerts",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "postgres"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 18,
-        "y": 1
-      },
-      "id": 12,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "values": false,
-          "fields": "",
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "postgres"
-          },
-          "format": "table",
-          "group": [],
-          "metricColumn": "none",
-          "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) as value FROM alerts WHERE resolved = true AND ($__timeFilter(resolved_at))",
-          "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "alerts",
-          "timeColumn": "created_at",
-          "where": []
-        }
-      ],
-      "title": "Resolved Today",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "postgres"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 5
-      },
-      "id": 3,
-      "options": {
-        "legend": {
-          "calcs": [
-            "mean",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "postgres"
-          },
-          "format": "time_series",
-          "group": [],
-          "metricColumn": "none",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  date_trunc('hour', created_at)::timestamp as time,\n  severity as metric,\n  COUNT(*) as value\nFROM alerts\nWHERE ($__timeFilter(created_at))\nGROUP BY time, severity\nORDER BY time DESC",
-          "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "count"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "alerts",
-          "timeColumn": "created_at",
-          "where": []
-        }
-      ],
-      "title": "Alert Trend by Severity",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "postgres"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            }
-          },
-          "mappings": [],
-          "noValue": "No data"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 5
-      },
-      "id": 4,
-      "options": {
         "displayLabels": [
-          "percent"
+          "name"
         ],
         "legend": {
-          "displayMode": "table",
-          "placement": "right",
+          "displayMode": "list",
+          "placement": "bottom",
           "values": []
         },
-        "pieType": "pie",
+        "pieType": "donut",
         "reduceOptions": {
           "values": false,
           "fields": "",
@@ -529,25 +107,193 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  type as label,\n  COUNT(*) as value\nFROM alerts\nWHERE ($__timeFilter(created_at))\nGROUP BY type\nORDER BY value DESC",
+          "rawSql": "SELECT\n  CASE\n    WHEN d.purdue_level = 0 THEN 'L0-ICS'\n    WHEN d.purdue_level = 1 THEN 'L1-Control'\n    WHEN d.purdue_level = 2 THEN 'L2-Supervisory'\n    WHEN d.purdue_level = 3 THEN 'L3-Operations'\n    WHEN d.purdue_level = 4 THEN 'L4-Enterprise'\n    WHEN d.purdue_level = 5 THEN 'L5-DMZ'\n    ELSE 'Unknown'\n  END as level,\n  COUNT(*) as count\nFROM devices d\nWHERE ($__timeFilter(d.last_seen_at))\nGROUP BY d.purdue_level\nORDER BY d.purdue_level",
           "refId": "A",
           "select": [
             [
               {
                 "params": [
-                  "value"
+                  "count"
                 ],
                 "type": "column"
               }
             ]
           ],
-          "table": "alerts",
+          "table": "devices",
           "timeColumn": "created_at",
           "where": []
         }
       ],
-      "title": "Alerts by Type Distribution",
+      "title": "Purdue Model Level Distribution",
       "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 1
+      },
+      "id": 2,
+      "options": {
+        "displayLabels": [
+          "name"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "values": []
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "values": false,
+          "fields": "",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  CASE\n    WHEN d.status = 'online' THEN 'Online'\n    WHEN d.status = 'offline' THEN 'Offline'\n    ELSE 'Unknown'\n  END as status,\n  COUNT(*) as count\nFROM devices d\nWHERE ($__timeFilter(d.last_seen_at))\nGROUP BY d.status",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "count"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "devices",
+          "timeColumn": "created_at",
+          "where": []
+        }
+      ],
+      "title": "Device Status Distribution",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "green",
+                "value": 75
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 1
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "fields": "",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "WITH compliant_rules AS (\n  SELECT COUNT(*) as total_rules FROM firewall_rules WHERE enabled = true\n),\ncompliant_enforced AS (\n  SELECT COUNT(*) as enforced FROM firewall_rules \n  WHERE enabled = true AND action = 'allow'\n)\nSELECT\n  CASE\n    WHEN (SELECT total_rules FROM compliant_rules) = 0 THEN 0\n    ELSE ROUND(\n      (SELECT enforced FROM compliant_enforced)::numeric / \n      (SELECT total_rules FROM compliant_rules)::numeric * 100\n    )::int\n  END as isolation_score",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "isolation_score"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "firewall_rules",
+          "timeColumn": "created_at",
+          "where": []
+        }
+      ],
+      "type": "gauge",
+      "title": "Zone Isolation Compliance Score"
     },
     {
       "datasource": {
@@ -562,8 +308,8 @@
           "custom": {
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "Alert Count",
-            "axisPlacement": "left",
+            "axisLabel": "",
+            "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "bars",
             "fillOpacity": 100,
@@ -583,7 +329,142 @@
             "spanNulls": false,
             "stacking": {
               "group": "A",
-              "mode": "none"
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Online"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Offline"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  CASE\n    WHEN d.purdue_level = 0 THEN 'L0-ICS'\n    WHEN d.purdue_level = 1 THEN 'L1-Control'\n    WHEN d.purdue_level = 2 THEN 'L2-Supervisory'\n    WHEN d.purdue_level = 3 THEN 'L3-Operations'\n    WHEN d.purdue_level = 4 THEN 'L4-Enterprise'\n    WHEN d.purdue_level = 5 THEN 'L5-DMZ'\n    ELSE 'Unknown'\n  END as level,\n  CASE WHEN d.status = 'online' THEN 'Online' ELSE 'Offline' END as status,\n  COUNT(*) as count\nFROM devices d\nWHERE ($__timeFilter(d.last_seen_at))\nGROUP BY d.purdue_level, d.status\nORDER BY d.purdue_level, d.status",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "count"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "devices",
+          "timeColumn": "created_at",
+          "where": []
+        }
+      ],
+      "title": "Devices by Purdue Level and Status",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
             },
             "thresholdsStyle": {
               "mode": "off"
@@ -604,9 +485,9 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 13
+        "w": 12,
+        "x": 12,
+        "y": 9
       },
       "id": 5,
       "options": {
@@ -615,7 +496,7 @@
             "sum"
           ],
           "displayMode": "table",
-          "placement": "right",
+          "placement": "bottom",
           "showLegend": true
         },
         "tooltip": {
@@ -633,24 +514,24 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  d.name as device,\n  COUNT(a.id) as alert_count\nFROM alerts a\nLEFT JOIN devices d ON a.device_id = d.id\nWHERE ($__timeFilter(a.created_at))\nGROUP BY d.id, d.name\nORDER BY alert_count DESC\nLIMIT 15",
+          "rawSql": "SELECT\n  CASE\n    WHEN d.purdue_level = 0 THEN 'L0-ICS'\n    WHEN d.purdue_level = 1 THEN 'L1-Control'\n    WHEN d.purdue_level = 2 THEN 'L2-Supervisory'\n    WHEN d.purdue_level = 3 THEN 'L3-Operations'\n    WHEN d.purdue_level = 4 THEN 'L4-Enterprise'\n    WHEN d.purdue_level = 5 THEN 'L5-DMZ'\n    ELSE 'Unknown'\n  END as level,\n  COUNT(DISTINCT r.device_id) as devices_with_risk_assessment\nFROM devices d\nLEFT JOIN risk_assessments r ON d.id = r.device_id AND ($__timeFilter(r.assessed_at))\nWHERE ($__timeFilter(d.last_seen_at))\nGROUP BY d.purdue_level\nORDER BY d.purdue_level",
           "refId": "A",
           "select": [
             [
               {
                 "params": [
-                  "alert_count"
+                  "devices_with_risk_assessment"
                 ],
                 "type": "column"
               }
             ]
           ],
-          "table": "alerts",
+          "table": "devices",
           "timeColumn": "created_at",
           "where": []
         }
       ],
-      "title": "Top Affected Devices",
+      "title": "Devices with Risk Assessment by Level",
       "type": "timeseries"
     },
     {
@@ -694,55 +575,13 @@
                 "value": [
                   {
                     "options": {
-                      "Created": {
-                        "color": "blue",
+                      "Allow": {
+                        "color": "green",
                         "index": 0
                       },
-                      "Acknowledged": {
-                        "color": "yellow",
-                        "index": 1
-                      },
-                      "Resolved": {
-                        "color": "green",
-                        "index": 2
-                      }
-                    },
-                    "type": "value"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Severity"
-            },
-            "properties": [
-              {
-                "id": "custom.displayMode",
-                "value": "color-background"
-              },
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "critical": {
+                      "Deny": {
                         "color": "red",
-                        "index": 0
-                      },
-                      "high": {
-                        "color": "orange",
                         "index": 1
-                      },
-                      "medium": {
-                        "color": "yellow",
-                        "index": 2
-                      },
-                      "low": {
-                        "color": "green",
-                        "index": 3
                       }
                     },
                     "type": "value"
@@ -754,10 +593,10 @@
         ]
       },
       "gridPos": {
-        "h": 10,
+        "h": 8,
         "w": 24,
         "x": 0,
-        "y": 21
+        "y": 17
       },
       "id": 6,
       "options": {
@@ -770,12 +609,7 @@
           "show": false
         },
         "showHeader": true,
-        "sortBy": [
-          {
-            "displayName": "Alert Status Timeline",
-            "desc": true
-          }
-        ]
+        "sortBy": []
       },
       "pluginVersion": "10.2.0",
       "targets": [
@@ -788,24 +622,24 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  a.id,\n  a.created_at as created_at,\n  CASE\n    WHEN a.resolved THEN 'Resolved'\n    WHEN a.acknowledged THEN 'Acknowledged'\n    ELSE 'Created'\n  END as status,\n  EXTRACT(EPOCH FROM (COALESCE(a.resolved_at, NOW()) - a.created_at))::int/60 as ttf_minutes,\n  EXTRACT(EPOCH FROM (COALESCE(a.acknowledged_at, NOW()) - a.created_at))::int/60 as ttack_minutes,\n  EXTRACT(EPOCH FROM (COALESCE(a.resolved_at, NOW()) - COALESCE(a.acknowledged_at, a.created_at)))::int/60 as ttres_minutes,\n  a.severity,\n  a.type,\n  a.title,\n  d.name as device\nFROM alerts a\nLEFT JOIN devices d ON a.device_id = d.id\nWHERE ($__timeFilter(a.created_at))\nORDER BY a.created_at DESC\nLIMIT 50",
+          "rawSql": "SELECT\n  src_zone.name as source_zone,\n  dst_zone.name as dest_zone,\n  fr.protocol as protocol,\n  fr.port::text as port,\n  fr.action as status,\n  CASE WHEN fr.enabled THEN 'Enabled' ELSE 'Disabled' END as enabled,\n  fr.description\nFROM firewall_rules fr\nJOIN security_zones src_zone ON fr.source_zone_id = src_zone.zone_id\nJOIN security_zones dst_zone ON fr.destination_zone_id = dst_zone.zone_id\nORDER BY fr.source_zone_id, fr.destination_zone_id, fr.action DESC\nLIMIT 20",
           "refId": "A",
           "select": [
             [
               {
                 "params": [
-                  "created_at"
+                  "action"
                 ],
                 "type": "column"
               }
             ]
           ],
-          "table": "alerts",
+          "table": "firewall_rules",
           "timeColumn": "created_at",
           "where": []
         }
       ],
-      "title": "Alert Lifecycle Timeline (Created → Acknowledged → Resolved)",
+      "title": "Firewall Policy Status & Zone-to-Zone Rules",
       "type": "table"
     },
     {
@@ -821,7 +655,7 @@
           "custom": {
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "MTTR (Minutes)",
+            "axisLabel": "Average Latency (ms)",
             "axisPlacement": "left",
             "barAlignment": 0,
             "drawStyle": "line",
@@ -858,15 +692,15 @@
               }
             ]
           },
-          "unit": "m"
+          "unit": "ms"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 24,
         "x": 0,
-        "y": 31
+        "y": 25
       },
       "id": 7,
       "options": {
@@ -895,126 +729,24 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  date_trunc('6 hours', a.resolved_at)::timestamp as time,\n  a.severity as metric,\n  AVG(EXTRACT(EPOCH FROM (a.resolved_at - a.created_at))::int/60)::int as mttr_minutes\nFROM alerts a\nWHERE a.resolved = true AND ($__timeFilter(a.resolved_at))\nGROUP BY time, severity\nORDER BY time DESC",
+          "rawSql": "SELECT\n  date_trunc('5 minutes', c.last_seen_at)::timestamp as time,\n  CASE\n    WHEN src_zone.name != dst_zone.name THEN src_zone.name || ' → ' || dst_zone.name\n    ELSE 'Intra-Zone'\n  END as zone_pair,\n  AVG(c.latency_ms)::int as latency\nFROM connections c\nJOIN devices d1 ON c.source_device_id = d1.id\nJOIN devices d2 ON c.target_device_id = d2.id\nLEFT JOIN security_zones src_zone ON d1.security_zone = src_zone.zone_id\nLEFT JOIN security_zones dst_zone ON d2.security_zone = dst_zone.zone_id\nWHERE ($__timeFilter(c.last_seen_at))\n  AND c.latency_ms > 0\nGROUP BY time, zone_pair\nORDER BY time DESC",
           "refId": "A",
           "select": [
             [
               {
                 "params": [
-                  "mttr_minutes"
+                  "latency_ms"
                 ],
                 "type": "column"
               }
             ]
           ],
-          "table": "alerts",
+          "table": "connections",
           "timeColumn": "created_at",
           "where": []
         }
       ],
-      "title": "MTTR (Mean Time To Resolve) by Severity",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "postgres"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "Alert Count",
-            "axisPlacement": "left",
-            "barAlignment": 0,
-            "drawStyle": "bars",
-            "fillOpacity": 100,
-            "gradientMode": "none",
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 31
-      },
-      "id": 8,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "postgres"
-          },
-          "format": "table",
-          "group": [],
-          "metricColumn": "none",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  date_trunc('1 day', a.created_at)::timestamp as time,\n  'Resolved' as metric,\n  COUNT(*) as count\nFROM alerts a\nWHERE a.resolved = true AND ($__timeFilter(a.created_at))\nGROUP BY time\nUNION ALL\nSELECT\n  date_trunc('1 day', a.created_at)::timestamp as time,\n  'Unresolved' as metric,\n  COUNT(*) as count\nFROM alerts a\nWHERE a.resolved = false AND ($__timeFilter(a.created_at))\nGROUP BY time\nORDER BY time DESC",
-          "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "count"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "alerts",
-          "timeColumn": "created_at",
-          "where": []
-        }
-      ],
-      "title": "Alert Resolution Status (Daily)",
+      "title": "Inter-Zone Latency Analysis",
       "type": "timeseries"
     }
   ],
@@ -1022,21 +754,21 @@
   "style": "dark",
   "tags": [
     "scada",
-    "security",
-    "alerts",
-    "incident-response"
+    "zones",
+    "purdue",
+    "segmentation"
   ],
   "templating": {
     "list": []
   },
   "time": {
-    "from": "now-24h",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {},
-  "timezone": "browser",
-  "title": "Security Alerts Dashboard",
-  "uid": "scada-security-alerts",
+  "timezone": "",
+  "title": "Zone Overview Dashboard",
+  "uid": "scada-zone-overview",
   "version": 1,
   "weekStart": ""
 }

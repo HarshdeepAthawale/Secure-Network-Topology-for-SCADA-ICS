@@ -1,0 +1,778 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": true,
+  "panels": [
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 14,
+      "options": {
+        "text": "Real-time Network Topology Dashboard"
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [],
+      "type": "text",
+      "transparent": true
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "noValue": "No data"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 16,
+        "x": 0,
+        "y": 1
+      },
+      "id": 1,
+      "options": {
+        "nodeGraphPanel": {
+          "annotationColors": [],
+          "annotationKeys": [],
+          "arcSection": [],
+          "configurationSection": [],
+          "mainStatUnit": "",
+          "nodeSize": 15,
+          "textMode": "value and name",
+          "unit": ""
+        }
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  d.id,\n  d.name,\n  d.type::text AS title,\n  d.purdue_level AS purdue,\n  CASE\n    WHEN d.status = 'online' THEN 'green'\n    WHEN d.status = 'offline' THEN 'red'\n    WHEN d.status = 'unknown' THEN 'yellow'\n    ELSE 'gray'\n  END AS color,\n  CASE\n    WHEN d.purdue_level = 0 THEN 'L0-ICS'\n    WHEN d.purdue_level = 1 THEN 'L1-Control'\n    WHEN d.purdue_level = 2 THEN 'L2-Supervisory'\n    WHEN d.purdue_level = 3 THEN 'L3-Operations'\n    WHEN d.purdue_level = 4 THEN 'L4-Enterprise'\n    WHEN d.purdue_level = 5 THEN 'L5-DMZ'\n    ELSE 'Unknown'\n  END AS icon\nFROM devices d\nWHERE ($__timeFilter(d.last_seen_at))\n  AND d.purdue_level = ANY(string_to_array($purdue_level, ',')::int[])\n  AND ($security_zone = 'all' OR d.security_zone::text = $security_zone)\n  AND ($device_type = 'all' OR d.type::text = $device_type)\nORDER BY d.purdue_level, d.name",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "devices",
+          "timeColumn": "created_at",
+          "where": []
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  c.source_device_id AS source,\n  c.target_device_id AS target,\n  c.protocol::text AS label,\n  CASE\n    WHEN c.is_secure THEN 'green'\n    ELSE 'red'\n  END AS color,\n  CASE\n    WHEN c.connection_type::text = 'ethernet' THEN '2'\n    WHEN c.connection_type::text = 'wireless' THEN '1'\n    ELSE '1.5'\n  END AS thickness\nFROM connections c\nJOIN devices d1 ON c.source_device_id = d1.id\nJOIN devices d2 ON c.target_device_id = d2.id\nWHERE ($__timeFilter(c.last_seen_at))\n  AND d1.purdue_level = ANY(string_to_array($purdue_level, ',')::int[])\n  AND d2.purdue_level = ANY(string_to_array($purdue_level, ',')::int[])\n  AND ($security_zone = 'all' OR d1.security_zone::text = $security_zone OR d2.security_zone::text = $security_zone)\nORDER BY c.last_seen_at DESC",
+          "refId": "B",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "connections",
+          "timeColumn": "created_at",
+          "where": []
+        }
+      ],
+      "title": "Network Topology Graph",
+      "type": "nodeGraph"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 1
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "fields": "",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  purdue_level,\n  COUNT(*) as count\nFROM devices\nWHERE ($__timeFilter(last_seen_at))\n  AND purdue_level = ANY(string_to_array($purdue_level, ',')::int[])\n  AND ($security_zone = 'all' OR security_zone::text = $security_zone)\n  AND ($device_type = 'all' OR type::text = $device_type)\nGROUP BY purdue_level\nORDER BY purdue_level",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "count"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "devices",
+          "timeColumn": "created_at",
+          "where": []
+        }
+      ],
+      "title": "Device Count by Purdue Level",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {
+              "count": 0,
+              "purdue_level": 1
+            },
+            "renameByName": {
+              "count": "Total Devices",
+              "purdue_level": "Level"
+            }
+          }
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 5
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "fields": "",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT c.id) as active_connections\nFROM connections c\nJOIN devices d1 ON c.source_device_id = d1.id\nJOIN devices d2 ON c.target_device_id = d2.id\nWHERE ($__timeFilter(c.last_seen_at))\n  AND d1.purdue_level = ANY(string_to_array($purdue_level, ',')::int[])\n  AND d2.purdue_level = ANY(string_to_array($purdue_level, ',')::int[])\n  AND ($security_zone = 'all' OR d1.security_zone::text = $security_zone OR d2.security_zone::text = $security_zone)",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "active_connections"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "connections",
+          "timeColumn": "created_at",
+          "where": []
+        }
+      ],
+      "title": "Active Connections",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  date_trunc('5 minutes', a.created_at)::timestamp AS time,\n  CASE\n    WHEN a.type = 'device_discovered' THEN 'Device Discovered'\n    WHEN a.type = 'device_removed' THEN 'Device Removed'\n    WHEN a.type = 'connection_added' THEN 'Connection Added'\n    WHEN a.type = 'connection_removed' THEN 'Connection Removed'\n    ELSE a.type\n  END AS metric,\n  COUNT(*) as count\nFROM alerts a\nWHERE ($__timeFilter(a.created_at))\n  AND a.type IN ('device_discovered', 'device_removed', 'connection_added', 'connection_removed')\nGROUP BY time, metric\nORDER BY time DESC",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "count"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alerts",
+          "timeColumn": "created_at",
+          "where": []
+        }
+      ],
+      "title": "Recent Topology Changes Timeline",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "noValue": "No data"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 21
+      },
+      "id": 5,
+      "options": {
+        "displayLabels": [
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": []
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "values": false,
+          "fields": "",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  CASE\n    WHEN security_zone = 'L0-ICS' THEN 'Process Zone (L0)'\n    WHEN security_zone = 'L1-Control' THEN 'Control Zone (L1)'\n    WHEN security_zone = 'L2-Supervisory' THEN 'Supervisory Zone (L2)'\n    WHEN security_zone = 'L3-Operations' THEN 'Operations Zone (L3)'\n    WHEN security_zone = 'L4-Enterprise' THEN 'Enterprise Zone (L4)'\n    WHEN security_zone = 'L5-DMZ' THEN 'DMZ (L5)'\n    ELSE 'Unclassified'\n  END AS zone,\n  COUNT(*) as device_count\nFROM devices\nWHERE ($__timeFilter(last_seen_at))\n  AND purdue_level = ANY(string_to_array($purdue_level, ',')::int[])\n  AND ($security_zone = 'all' OR security_zone::text = $security_zone)\n  AND ($device_type = 'all' OR type::text = $device_type)\nGROUP BY security_zone\nORDER BY device_count DESC",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "device_count"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "devices",
+          "timeColumn": "created_at",
+          "where": []
+        }
+      ],
+      "title": "Zone Distribution",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "noValue": "No data"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 21
+      },
+      "id": 6,
+      "options": {
+        "displayLabels": [
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": []
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "values": false,
+          "fields": "",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  UPPER(protocol) as protocol,\n  COUNT(*) as connection_count\nFROM connections\nWHERE ($__timeFilter(last_seen_at))\nGROUP BY protocol\nORDER BY connection_count DESC",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "connection_count"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "connections",
+          "timeColumn": "created_at",
+          "where": []
+        }
+      ],
+      "title": "Protocol Distribution",
+      "type": "piechart"
+    }
+  ],
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [
+    "scada",
+    "topology",
+    "realtime",
+    "ot-security"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "0,1,2,3,4,5",
+          "value": "0,1,2,3,4,5"
+        },
+        "description": "Purdue Model Levels to display",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Purdue Level",
+        "multi": true,
+        "name": "purdue_level",
+        "options": [
+          {
+            "selected": true,
+            "text": "L0 (ICS)",
+            "value": "0"
+          },
+          {
+            "selected": true,
+            "text": "L1 (Control)",
+            "value": "1"
+          },
+          {
+            "selected": true,
+            "text": "L2 (Supervisory)",
+            "value": "2"
+          },
+          {
+            "selected": true,
+            "text": "L3 (Operations)",
+            "value": "3"
+          },
+          {
+            "selected": true,
+            "text": "L4 (Enterprise)",
+            "value": "4"
+          },
+          {
+            "selected": true,
+            "text": "L5 (DMZ)",
+            "value": "5"
+          }
+        ],
+        "query": "0,1,2,3,4,5",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "all",
+          "value": "all"
+        },
+        "description": "Filter by Security Zone",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Security Zone",
+        "multi": false,
+        "name": "security_zone",
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "all"
+          },
+          {
+            "selected": false,
+            "text": "L0-ICS",
+            "value": "L0-ICS"
+          },
+          {
+            "selected": false,
+            "text": "L1-Control",
+            "value": "L1-Control"
+          },
+          {
+            "selected": false,
+            "text": "L2-Supervisory",
+            "value": "L2-Supervisory"
+          },
+          {
+            "selected": false,
+            "text": "L3-Operations",
+            "value": "L3-Operations"
+          },
+          {
+            "selected": false,
+            "text": "L4-Enterprise",
+            "value": "L4-Enterprise"
+          },
+          {
+            "selected": false,
+            "text": "L5-DMZ",
+            "value": "L5-DMZ"
+          }
+        ],
+        "query": "L0-ICS,L1-Control,L2-Supervisory,L3-Operations,L4-Enterprise,L5-DMZ",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "all",
+          "value": "all"
+        },
+        "description": "Filter by Device Type",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Device Type",
+        "multi": false,
+        "name": "device_type",
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "all"
+          },
+          {
+            "selected": false,
+            "text": "PLC",
+            "value": "PLC"
+          },
+          {
+            "selected": false,
+            "text": "RTU",
+            "value": "RTU"
+          },
+          {
+            "selected": false,
+            "text": "HMI",
+            "value": "HMI"
+          },
+          {
+            "selected": false,
+            "text": "Switch",
+            "value": "Switch"
+          },
+          {
+            "selected": false,
+            "text": "Router",
+            "value": "Router"
+          },
+          {
+            "selected": false,
+            "text": "Firewall",
+            "value": "Firewall"
+          },
+          {
+            "selected": false,
+            "text": "IED",
+            "value": "IED"
+          }
+        ],
+        "query": "PLC,RTU,HMI,Switch,Router,Firewall,IED",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Real-time Topology Dashboard",
+  "uid": "scada-realtime-topology",
+  "version": 1,
+  "weekStart": ""
+}

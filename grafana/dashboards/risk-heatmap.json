@@ -40,7 +40,7 @@
       },
       "id": 14,
       "options": {
-        "text": "Security Alerts & Response Timeline"
+        "text": "Risk Assessment & Heatmap Dashboard"
       },
       "pluginVersion": "10.2.0",
       "targets": [],
@@ -58,6 +58,8 @@
             "mode": "thresholds"
           },
           "mappings": [],
+          "max": 100,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -66,11 +68,20 @@
                 "value": null
               },
               {
+                "color": "yellow",
+                "value": 25
+              },
+              {
+                "color": "orange",
+                "value": 50
+              },
+              {
                 "color": "red",
-                "value": 1
+                "value": 75
               }
             ]
-          }
+          },
+          "unit": "short"
         },
         "overrides": []
       },
@@ -83,8 +94,8 @@
       "id": 1,
       "options": {
         "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto",
+        "graphMode": "none",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "values": false,
@@ -93,8 +104,9 @@
             "lastNotNull"
           ]
         },
-        "text": {},
-        "textMode": "auto"
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
       },
       "pluginVersion": "10.2.0",
       "targets": [
@@ -107,25 +119,25 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) as value FROM alerts WHERE severity = 'critical' AND resolved = false",
+          "rawSql": "SELECT COALESCE(AVG(overall_score), 0)::int as overall_risk\nFROM risk_assessments\nWHERE ($__timeFilter(assessed_at))",
           "refId": "A",
           "select": [
             [
               {
                 "params": [
-                  "value"
+                  "overall_score"
                 ],
                 "type": "column"
               }
             ]
           ],
-          "table": "alerts",
+          "table": "risk_assessments",
           "timeColumn": "created_at",
           "where": []
         }
       ],
-      "title": "Critical Alerts",
-      "type": "stat"
+      "type": "gauge",
+      "title": "Overall Risk Score"
     },
     {
       "datasource": {
@@ -138,6 +150,8 @@
             "mode": "thresholds"
           },
           "mappings": [],
+          "max": 100,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -146,11 +160,16 @@
                 "value": null
               },
               {
-                "color": "orange",
-                "value": 1
+                "color": "yellow",
+                "value": 30
+              },
+              {
+                "color": "red",
+                "value": 70
               }
             ]
-          }
+          },
+          "unit": "short"
         },
         "overrides": []
       },
@@ -163,8 +182,8 @@
       "id": 2,
       "options": {
         "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto",
+        "graphMode": "none",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "values": false,
@@ -173,8 +192,9 @@
             "lastNotNull"
           ]
         },
-        "text": {},
-        "textMode": "auto"
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
       },
       "pluginVersion": "10.2.0",
       "targets": [
@@ -187,25 +207,25 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) as value FROM alerts WHERE severity = 'high' AND resolved = false",
+          "rawSql": "SELECT COALESCE(AVG((factors->>'vulnerability_score')::float), 0)::int as vulnerability_score\nFROM risk_assessments\nWHERE ($__timeFilter(assessed_at))",
           "refId": "A",
           "select": [
             [
               {
                 "params": [
-                  "value"
+                  "vulnerability_score"
                 ],
                 "type": "column"
               }
             ]
           ],
-          "table": "alerts",
+          "table": "risk_assessments",
           "timeColumn": "created_at",
           "where": []
         }
       ],
-      "title": "High Alerts",
-      "type": "stat"
+      "type": "gauge",
+      "title": "Vulnerability Score"
     },
     {
       "datasource": {
@@ -216,6 +236,186 @@
         "defaults": {
           "color": {
             "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 30
+              },
+              {
+                "color": "red",
+                "value": 70
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "fields": "",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(AVG((factors->>'configuration_score')::float), 0)::int as configuration_score\nFROM risk_assessments\nWHERE ($__timeFilter(assessed_at))",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "configuration_score"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "risk_assessments",
+          "timeColumn": "created_at",
+          "where": []
+        }
+      ],
+      "type": "gauge",
+      "title": "Configuration Score"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 30
+              },
+              {
+                "color": "red",
+                "value": 70
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "fields": "",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(AVG((factors->>'exposure_score')::float), 0)::int as exposure_score\nFROM risk_assessments\nWHERE ($__timeFilter(assessed_at))",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "exposure_score"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "risk_assessments",
+          "timeColumn": "created_at",
+          "where": []
+        }
+      ],
+      "type": "gauge",
+      "title": "Exposure Score"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
           },
           "mappings": [],
           "thresholds": {
@@ -226,35 +426,78 @@
                 "value": null
               },
               {
-                "color": "yellow",
-                "value": 1
+                "color": "red",
+                "value": 70
               }
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Risk Score"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "mappings",
+                "value": []
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 25
+                    },
+                    {
+                      "color": "orange",
+                      "value": 50
+                    },
+                    {
+                      "color": "red",
+                      "value": 75
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 12,
-        "y": 1
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 5
       },
-      "id": 11,
+      "id": 5,
       "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "values": false,
+        "footer": {
+          "countRows": false,
           "fields": "",
-          "calcs": [
-            "lastNotNull"
-          ]
+          "reducer": [
+            "sum"
+          ],
+          "show": false
         },
-        "text": {},
-        "textMode": "auto"
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Risk Score",
+            "desc": true
+          }
+        ]
       },
       "pluginVersion": "10.2.0",
       "targets": [
@@ -267,101 +510,25 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) as value FROM alerts WHERE severity = 'medium' AND resolved = false",
+          "rawSql": "SELECT\n  d.name as device_name,\n  d.type as device_type,\n  sz.name as zone,\n  d.purdue_level as purdue_level,\n  r.overall_score as risk_score,\n  r.assessed_at as last_assessed\nFROM risk_assessments r\nJOIN devices d ON r.device_id = d.id\nLEFT JOIN security_zones sz ON d.security_zone = sz.zone_id\nWHERE ($__timeFilter(r.assessed_at))\nORDER BY r.overall_score DESC\nLIMIT 10",
           "refId": "A",
           "select": [
             [
               {
                 "params": [
-                  "value"
+                  "overall_score"
                 ],
                 "type": "column"
               }
             ]
           ],
-          "table": "alerts",
+          "table": "risk_assessments",
           "timeColumn": "created_at",
           "where": []
         }
       ],
-      "title": "Medium Alerts",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "postgres"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 18,
-        "y": 1
-      },
-      "id": 12,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "values": false,
-          "fields": "",
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "postgres"
-          },
-          "format": "table",
-          "group": [],
-          "metricColumn": "none",
-          "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) as value FROM alerts WHERE resolved = true AND ($__timeFilter(resolved_at))",
-          "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "alerts",
-          "timeColumn": "created_at",
-          "where": []
-        }
-      ],
-      "title": "Resolved Today",
-      "type": "stat"
+      "title": "Top 10 High-Risk Devices",
+      "type": "table"
     },
     {
       "datasource": {
@@ -420,455 +587,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 5
-      },
-      "id": 3,
-      "options": {
-        "legend": {
-          "calcs": [
-            "mean",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "postgres"
-          },
-          "format": "time_series",
-          "group": [],
-          "metricColumn": "none",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  date_trunc('hour', created_at)::timestamp as time,\n  severity as metric,\n  COUNT(*) as value\nFROM alerts\nWHERE ($__timeFilter(created_at))\nGROUP BY time, severity\nORDER BY time DESC",
-          "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "count"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "alerts",
-          "timeColumn": "created_at",
-          "where": []
-        }
-      ],
-      "title": "Alert Trend by Severity",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "postgres"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            }
-          },
-          "mappings": [],
-          "noValue": "No data"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 5
-      },
-      "id": 4,
-      "options": {
-        "displayLabels": [
-          "percent"
-        ],
-        "legend": {
-          "displayMode": "table",
-          "placement": "right",
-          "values": []
-        },
-        "pieType": "pie",
-        "reduceOptions": {
-          "values": false,
-          "fields": "",
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "postgres"
-          },
-          "format": "table",
-          "group": [],
-          "metricColumn": "none",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  type as label,\n  COUNT(*) as value\nFROM alerts\nWHERE ($__timeFilter(created_at))\nGROUP BY type\nORDER BY value DESC",
-          "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "alerts",
-          "timeColumn": "created_at",
-          "where": []
-        }
-      ],
-      "title": "Alerts by Type Distribution",
-      "type": "piechart"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "postgres"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "Alert Count",
-            "axisPlacement": "left",
-            "barAlignment": 0,
-            "drawStyle": "bars",
-            "fillOpacity": 100,
-            "gradientMode": "none",
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
         "y": 13
       },
-      "id": 5,
-      "options": {
-        "legend": {
-          "calcs": [
-            "sum"
-          ],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "postgres"
-          },
-          "format": "table",
-          "group": [],
-          "metricColumn": "none",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  d.name as device,\n  COUNT(a.id) as alert_count\nFROM alerts a\nLEFT JOIN devices d ON a.device_id = d.id\nWHERE ($__timeFilter(a.created_at))\nGROUP BY d.id, d.name\nORDER BY alert_count DESC\nLIMIT 15",
-          "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "alert_count"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "alerts",
-          "timeColumn": "created_at",
-          "where": []
-        }
-      ],
-      "title": "Top Affected Devices",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "postgres"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Status"
-            },
-            "properties": [
-              {
-                "id": "custom.displayMode",
-                "value": "color-background"
-              },
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "Created": {
-                        "color": "blue",
-                        "index": 0
-                      },
-                      "Acknowledged": {
-                        "color": "yellow",
-                        "index": 1
-                      },
-                      "Resolved": {
-                        "color": "green",
-                        "index": 2
-                      }
-                    },
-                    "type": "value"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Severity"
-            },
-            "properties": [
-              {
-                "id": "custom.displayMode",
-                "value": "color-background"
-              },
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "critical": {
-                        "color": "red",
-                        "index": 0
-                      },
-                      "high": {
-                        "color": "orange",
-                        "index": 1
-                      },
-                      "medium": {
-                        "color": "yellow",
-                        "index": 2
-                      },
-                      "low": {
-                        "color": "green",
-                        "index": 3
-                      }
-                    },
-                    "type": "value"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 10,
-        "w": 24,
-        "x": 0,
-        "y": 21
-      },
       "id": 6,
-      "options": {
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "displayName": "Alert Status Timeline",
-            "desc": true
-          }
-        ]
-      },
-      "pluginVersion": "10.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "postgres"
-          },
-          "format": "table",
-          "group": [],
-          "metricColumn": "none",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  a.id,\n  a.created_at as created_at,\n  CASE\n    WHEN a.resolved THEN 'Resolved'\n    WHEN a.acknowledged THEN 'Acknowledged'\n    ELSE 'Created'\n  END as status,\n  EXTRACT(EPOCH FROM (COALESCE(a.resolved_at, NOW()) - a.created_at))::int/60 as ttf_minutes,\n  EXTRACT(EPOCH FROM (COALESCE(a.acknowledged_at, NOW()) - a.created_at))::int/60 as ttack_minutes,\n  EXTRACT(EPOCH FROM (COALESCE(a.resolved_at, NOW()) - COALESCE(a.acknowledged_at, a.created_at)))::int/60 as ttres_minutes,\n  a.severity,\n  a.type,\n  a.title,\n  d.name as device\nFROM alerts a\nLEFT JOIN devices d ON a.device_id = d.id\nWHERE ($__timeFilter(a.created_at))\nORDER BY a.created_at DESC\nLIMIT 50",
-          "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "created_at"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "alerts",
-          "timeColumn": "created_at",
-          "where": []
-        }
-      ],
-      "title": "Alert Lifecycle Timeline (Created → Acknowledged → Resolved)",
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "postgres"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "MTTR (Minutes)",
-            "axisPlacement": "left",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "m"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 31
-      },
-      "id": 7,
       "options": {
         "legend": {
           "calcs": [
@@ -895,24 +616,24 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  date_trunc('6 hours', a.resolved_at)::timestamp as time,\n  a.severity as metric,\n  AVG(EXTRACT(EPOCH FROM (a.resolved_at - a.created_at))::int/60)::int as mttr_minutes\nFROM alerts a\nWHERE a.resolved = true AND ($__timeFilter(a.resolved_at))\nGROUP BY time, severity\nORDER BY time DESC",
+          "rawSql": "SELECT\n  date_trunc('1 day', r.assessed_at)::timestamp as time,\n  'Overall Risk' as metric,\n  AVG(r.overall_score)::int as value\nFROM risk_assessments r\nWHERE ($__timeFilter(r.assessed_at))\nGROUP BY time\nORDER BY time",
           "refId": "A",
           "select": [
             [
               {
                 "params": [
-                  "mttr_minutes"
+                  "overall_score"
                 ],
                 "type": "column"
               }
             ]
           ],
-          "table": "alerts",
+          "table": "risk_assessments",
           "timeColumn": "created_at",
           "where": []
         }
       ],
-      "title": "MTTR (Mean Time To Resolve) by Severity",
+      "title": "Risk Score Trend",
       "type": "timeseries"
     },
     {
@@ -928,8 +649,8 @@
           "custom": {
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "Alert Count",
-            "axisPlacement": "left",
+            "axisLabel": "",
+            "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "bars",
             "fillOpacity": 100,
@@ -972,7 +693,170 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 31
+        "y": 13
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  date_trunc('1 day', r.assessed_at)::timestamp as time,\n  'Vulnerability' as metric,\n  AVG((r.factors->>'vulnerability_score')::float)::int as value\nFROM risk_assessments r\nWHERE ($__timeFilter(r.assessed_at))\nGROUP BY time\nUNION ALL\nSELECT\n  date_trunc('1 day', r.assessed_at)::timestamp as time,\n  'Configuration' as metric,\n  AVG((r.factors->>'configuration_score')::float)::int as value\nFROM risk_assessments r\nWHERE ($__timeFilter(r.assessed_at))\nGROUP BY time\nUNION ALL\nSELECT\n  date_trunc('1 day', r.assessed_at)::timestamp as time,\n  'Exposure' as metric,\n  AVG((r.factors->>'exposure_score')::float)::int as value\nFROM risk_assessments r\nWHERE ($__timeFilter(r.assessed_at))\nGROUP BY time\nORDER BY time",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "overall_score"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "risk_assessments",
+          "timeColumn": "created_at",
+          "where": []
+        }
+      ],
+      "title": "Risk Factors Breakdown (Daily Average)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Risk Score Range",
+            "axisPlacement": "left",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "0-25 (Green)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "25-50 (Yellow)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "50-75 (Orange)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "75-100 (Red)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 21
       },
       "id": 8,
       "options": {
@@ -997,7 +881,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  date_trunc('1 day', a.created_at)::timestamp as time,\n  'Resolved' as metric,\n  COUNT(*) as count\nFROM alerts a\nWHERE a.resolved = true AND ($__timeFilter(a.created_at))\nGROUP BY time\nUNION ALL\nSELECT\n  date_trunc('1 day', a.created_at)::timestamp as time,\n  'Unresolved' as metric,\n  COUNT(*) as count\nFROM alerts a\nWHERE a.resolved = false AND ($__timeFilter(a.created_at))\nGROUP BY time\nORDER BY time DESC",
+          "rawSql": "WITH risk_buckets AS (\n  SELECT\n    CASE\n      WHEN overall_score >= 0 AND overall_score < 25 THEN '0-25 (Green)'\n      WHEN overall_score >= 25 AND overall_score < 50 THEN '25-50 (Yellow)'\n      WHEN overall_score >= 50 AND overall_score < 75 THEN '50-75 (Orange)'\n      WHEN overall_score >= 75 THEN '75-100 (Red)'\n    END as risk_bucket\n  FROM risk_assessments\n  WHERE ($__timeFilter(assessed_at))\n)\nSELECT\n  risk_bucket as \"Risk Score Range\",\n  COUNT(*) as \"Device Count\"\nFROM risk_buckets\nGROUP BY risk_bucket\nORDER BY risk_bucket",
           "refId": "A",
           "select": [
             [
@@ -1009,12 +893,12 @@
               }
             ]
           ],
-          "table": "alerts",
+          "table": "risk_assessments",
           "timeColumn": "created_at",
           "where": []
         }
       ],
-      "title": "Alert Resolution Status (Daily)",
+      "title": "Risk Distribution Histogram",
       "type": "timeseries"
     }
   ],
@@ -1022,21 +906,21 @@
   "style": "dark",
   "tags": [
     "scada",
-    "security",
-    "alerts",
-    "incident-response"
+    "risk",
+    "assessment",
+    "heatmap"
   ],
   "templating": {
     "list": []
   },
   "time": {
-    "from": "now-24h",
+    "from": "now-7d",
     "to": "now"
   },
   "timepicker": {},
-  "timezone": "browser",
-  "title": "Security Alerts Dashboard",
-  "uid": "scada-security-alerts",
+  "timezone": "",
+  "title": "Risk Heatmap Dashboard",
+  "uid": "scada-risk-heatmap",
   "version": 1,
   "weekStart": ""
 }
