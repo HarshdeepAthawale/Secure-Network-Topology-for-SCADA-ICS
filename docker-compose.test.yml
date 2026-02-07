@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  postgres-test:
+    image: postgres:15-alpine
+    container_name: scada-test-db
+    environment:
+      POSTGRES_DB: scada_topology_test
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+      POSTGRES_INITDB_ARGS: "-c shared_buffers=256MB -c max_connections=200"
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user -d scada_topology_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - scada_test_network
+
+  localstack:
+    image: localstack/localstack:latest
+    container_name: scada-test-localstack
+    environment:
+      SERVICES: s3,lambda,sqs,iot,kinesis
+      DEBUG: 0
+      DATA_DIR: /tmp/localstack/data
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: testing
+      AWS_SECRET_ACCESS_KEY: testing
+      DOCKER_HOST: unix:///var/run/docker.sock
+    ports:
+      - "4566:4566"
+      - "4571:4571"
+    volumes:
+      - "${TMPDIR:-/tmp}/localstack:/tmp/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    healthcheck:
+      test: ["CMD", "awslocal", "s3", "ls"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - scada_test_network
+    depends_on:
+      - postgres-test
+
+  redis-test:
+    image: redis:7-alpine
+    container_name: scada-test-redis
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - scada_test_network
+
+  mosquitto-test:
+    image: eclipse-mosquitto:2-alpine
+    container_name: scada-test-mosquitto
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+    healthcheck:
+      test: ["CMD", "mosquitto_sub", "-h", "localhost", "-t", "$SYS/#", "-C", "1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - scada_test_network
+    profiles:
+      - with-mqtt
+
+volumes:
+  postgres_test_data:
+
+networks:
+  scada_test_network:
+    driver: bridge
