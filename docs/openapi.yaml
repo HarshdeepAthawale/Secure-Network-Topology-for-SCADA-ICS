@@ -1,0 +1,1140 @@
+openapi: 3.0.0
+info:
+  title: SCADA/ICS Network Topology Discovery API
+  version: 1.0.0
+  description: |
+    Real-time visibility into industrial control system (ICS) and SCADA networks.
+
+    This API enables comprehensive discovery and monitoring of networked industrial devices,
+    providing real-time topology data, security assessments, and compliance reporting.
+
+    ## Authentication
+
+    All endpoints (except `/health`) require authentication via API Key.
+    Include your API key in the request header:
+    ```
+    X-API-Key: your-api-key-here
+    ```
+
+    ## Base URL
+
+    ```
+    https://{api-gateway-id}.execute-api.{region}.amazonaws.com/v1
+    ```
+
+    Replace `{api-gateway-id}` and `{region}` with your AWS API Gateway details.
+
+    ## Rate Limits
+
+    - Standard: 100 requests/minute per API key
+    - Premium: 1000 requests/minute per API key
+    - Responses include `X-RateLimit-Remaining` and `X-RateLimit-Reset` headers
+  contact:
+    name: Support Team
+    url: https://github.com/company/scada-topology
+    email: support@example.com
+  license:
+    name: Proprietary
+    url: https://example.com/license
+
+servers:
+  - url: https://api.example.com/v1
+    description: Production environment
+  - url: https://staging-api.example.com/v1
+    description: Staging environment
+
+tags:
+  - name: Topology
+    description: Network topology queries and snapshots
+  - name: Devices
+    description: Industrial device discovery and management
+  - name: Connections
+    description: Network connection and link analysis
+  - name: Alerts
+    description: Security alerts and event management
+  - name: Risk
+    description: Risk assessment and scoring
+  - name: Export
+    description: Report generation and data export
+  - name: Health
+    description: System health and status checks
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      operationId: healthCheck
+      tags:
+        - Health
+      security: []
+      description: |
+        Returns the current health status of the API. No authentication required.
+        Use this endpoint to verify the API is operational.
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [ok, degraded]
+                    description: Health status of the system
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: Current server time
+                  version:
+                    type: string
+                    description: API version
+                required: [status, timestamp]
+              examples:
+                healthy:
+                  value:
+                    status: ok
+                    timestamp: '2024-02-08T10:30:00Z'
+                    version: '1.0.0'
+
+  /topology:
+    get:
+      summary: Get current network topology
+      operationId: getTopology
+      tags:
+        - Topology
+      description: |
+        Retrieve the complete current network topology including all devices,
+        connections, and zone information.
+      parameters:
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [json, graphml]
+            default: json
+          description: Response format (json for API, graphml for visualization tools)
+      responses:
+        '200':
+          description: Current network topology
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopologyResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /devices:
+    get:
+      summary: List all devices
+      operationId: listDevices
+      tags:
+        - Devices
+      description: |
+        Retrieve a paginated list of all discovered devices. Supports filtering
+        by Purdue level, security zone, status, type, and vendor.
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+        - name: level
+          in: query
+          required: false
+          schema:
+            type: integer
+            enum: [0, 1, 2, 3, 4, 5, 99]
+          description: |
+            Filter by Purdue model level:
+            - 0: Process (sensors, actuators, drives)
+            - 1: Control (PLC, RTU, DCS, controllers)
+            - 2: Supervisory (SCADA, HMI, alarm servers)
+            - 3: Operations (MES, historian, engineering)
+            - 4: Corporate (ERP, data analytics)
+            - 5: Remote (external partners)
+            - 99: DMZ (demilitarized zone)
+        - name: zone
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [process, control, supervisory, operations, enterprise, dmz, untrusted]
+          description: Filter by security zone
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [online, offline, degraded, maintenance, unknown]
+          description: Filter by device operational status
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by device type (plc, rtu, sensor, switch, etc.)
+        - name: vendor
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by device vendor (Siemens, Schneider Electric, etc.)
+      responses:
+        '200':
+          description: Paginated device list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /devices/{deviceId}:
+    get:
+      summary: Get device details
+      operationId: getDevice
+      tags:
+        - Devices
+      description: |
+        Retrieve comprehensive details for a specific device including
+        interfaces, protocols, and metadata.
+      parameters:
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '200':
+          description: Device details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /devices/{deviceId}/risk:
+    get:
+      summary: Get device risk assessment
+      operationId: getDeviceRisk
+      tags:
+        - Devices
+        - Risk
+      description: |
+        Retrieve the current risk assessment for a device including
+        vulnerability, configuration, exposure, and compliance scores.
+      parameters:
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '200':
+          description: Device risk assessment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskAssessment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /connections:
+    get:
+      summary: List network connections
+      operationId: listConnections
+      tags:
+        - Connections
+      description: |
+        Retrieve a paginated list of all discovered network connections
+        between devices. Supports filtering by protocol, security status, and device.
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+        - name: deviceId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: Filter by source or target device
+        - name: protocol
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by protocol (modbus, profinet, ethernet, etc.)
+        - name: secure
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: Filter by security status (true for encrypted/authenticated)
+      responses:
+        '200':
+          description: Paginated connection list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /connections/{connectionId}:
+    get:
+      summary: Get connection details
+      operationId: getConnection
+      tags:
+        - Connections
+      description: Retrieve detailed information about a specific network connection.
+      parameters:
+        - name: connectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Connection identifier
+      responses:
+        '200':
+          description: Connection details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Connection'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /alerts:
+    get:
+      summary: List security alerts
+      operationId: listAlerts
+      tags:
+        - Alerts
+      description: |
+        Retrieve a paginated list of security alerts. Supports filtering
+        by severity, type, status, and device.
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+        - name: severity
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [critical, high, medium, low, info]
+          description: Filter by alert severity level
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [security, connectivity, compliance, performance, configuration]
+          description: Filter by alert type
+        - name: acknowledged
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: Filter by acknowledgment status
+        - name: resolved
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: Filter by resolution status
+        - name: deviceId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: Filter alerts related to a specific device
+      responses:
+        '200':
+          description: Paginated alert list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /alerts/{alertId}:
+    get:
+      summary: Get alert details
+      operationId: getAlert
+      tags:
+        - Alerts
+      description: Retrieve detailed information about a specific alert.
+      parameters:
+        - $ref: '#/components/parameters/AlertId'
+      responses:
+        '200':
+          description: Alert details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alert'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /alerts/{alertId}/acknowledge:
+    put:
+      summary: Acknowledge alert
+      operationId: acknowledgeAlert
+      tags:
+        - Alerts
+      description: |
+        Mark an alert as acknowledged by a user. Used to indicate that
+        the alert has been reviewed and is being handled.
+      parameters:
+        - $ref: '#/components/parameters/AlertId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+                  description: Reason for acknowledging the alert
+              example:
+                reason: 'In progress - scheduled maintenance window'
+      responses:
+        '200':
+          description: Alert acknowledged successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alert'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /zones:
+    get:
+      summary: List security zones
+      operationId: listZones
+      tags:
+        - Topology
+      description: |
+        Retrieve all configured security zones based on the Purdue model.
+        Zones are used to segment and protect critical infrastructure.
+      responses:
+        '200':
+          description: List of security zones
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ZoneListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /export/topology:
+    get:
+      summary: Export topology report
+      operationId: exportTopology
+      tags:
+        - Export
+      description: |
+        Export the current network topology in various formats suitable
+        for analysis, visualization, or integration with other tools.
+      parameters:
+        - name: format
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [json, csv, xml, graphml]
+          description: Export format
+      responses:
+        '200':
+          description: Exported topology data
+          content:
+            application/json:
+              schema:
+                type: object
+            text/csv:
+              schema:
+                type: string
+            application/xml:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /export/compliance:
+    get:
+      summary: Export compliance report
+      operationId: exportCompliance
+      tags:
+        - Export
+      description: |
+        Generate and export a compliance report covering multiple standards:
+        - IEC 62443 (Industrial Automation and Control Systems Security)
+        - NERC CIP (North American Electric Reliability Corporation)
+        - NIST CSF (National Institute of Standards and Technology Cybersecurity Framework)
+      parameters:
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [json, pdf, csv]
+            default: json
+          description: Export format
+        - name: standard
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [iec62443, nerccip, nistcsf]
+          description: Specific compliance standard to report on
+      responses:
+        '200':
+          description: Compliance report
+          content:
+            application/json:
+              schema:
+                type: object
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication
+
+  parameters:
+    DeviceId:
+      name: deviceId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Unique identifier for the device
+      example: '123e4567-e89b-12d3-a456-426614174000'
+
+    AlertId:
+      name: alertId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Unique identifier for the alert
+      example: '123e4567-e89b-12d3-a456-426614174000'
+
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 100
+      description: Maximum number of results to return per page
+
+    Offset:
+      name: offset
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+      description: Number of results to skip for pagination
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: 'Bad Request'
+            message: 'Invalid limit parameter. Must be between 1 and 100.'
+            code: 400
+
+    Unauthorized:
+      description: Authentication failed or missing credentials
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: 'Unauthorized'
+            message: 'Invalid or missing API key'
+            code: 401
+
+    NotFound:
+      description: Requested resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: 'Not Found'
+            message: 'Device not found with the specified ID'
+            code: 404
+
+    TooManyRequests:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: 'Too Many Requests'
+            message: 'Rate limit exceeded. Maximum 100 requests per minute.'
+            code: 429
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: 'Internal Server Error'
+            message: 'An unexpected error occurred processing your request'
+            code: 500
+
+  schemas:
+    Device:
+      type: object
+      required:
+        - id
+        - name
+        - type
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique device identifier
+        name:
+          type: string
+          description: Device display name
+        hostname:
+          type: string
+          description: Network hostname or FQDN
+          nullable: true
+        type:
+          type: string
+          enum:
+            - sensor
+            - actuator
+            - plc
+            - rtu
+            - dcs
+            - scada_server
+            - hmi
+            - mes
+            - historian
+            - erp
+            - switch
+            - router
+            - firewall
+            - gateway
+            - data_diode
+            - jump_server
+            - workstation
+            - drive
+            - instrument
+          description: Device type classification
+        vendor:
+          type: string
+          description: Manufacturer name (e.g., Siemens, Schneider Electric)
+          nullable: true
+        model:
+          type: string
+          description: Device model number
+          nullable: true
+        firmware_version:
+          type: string
+          description: Current firmware version
+          nullable: true
+        serial_number:
+          type: string
+          description: Device serial number
+          nullable: true
+        purdueLevel:
+          type: integer
+          minimum: 0
+          maximum: 5
+          enum: [0, 1, 2, 3, 4, 5, 99]
+          description: |
+            Purdue model level:
+            0=Process, 1=Control, 2=Supervisory, 3=Operations, 4=Corporate, 5=Remote, 99=DMZ
+        securityZone:
+          type: string
+          enum: [process, control, supervisory, operations, enterprise, dmz, untrusted]
+          description: Security zone assignment
+        status:
+          type: string
+          enum: [online, offline, degraded, maintenance, unknown]
+          description: Current operational status
+        location:
+          type: object
+          nullable: true
+          properties:
+            site:
+              type: string
+            building:
+              type: string
+            floor:
+              type: string
+            room:
+              type: string
+            coordinates:
+              type: object
+              properties:
+                latitude:
+                  type: number
+                longitude:
+                  type: number
+          description: Physical location information
+        lastSeenAt:
+          type: string
+          format: date-time
+          description: Last time device was active
+        discoveredAt:
+          type: string
+          format: date-time
+          description: When device was first discovered
+        createdAt:
+          type: string
+          format: date-time
+          description: When record was created in system
+        updatedAt:
+          type: string
+          format: date-time
+          description: When record was last updated
+
+    Connection:
+      type: object
+      required:
+        - id
+        - sourceDeviceId
+        - targetDeviceId
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Connection identifier
+        sourceDeviceId:
+          type: string
+          format: uuid
+          description: Source device UUID
+        targetDeviceId:
+          type: string
+          format: uuid
+          description: Target device UUID
+        sourceInterface:
+          type: string
+          description: Source network interface
+          nullable: true
+        targetInterface:
+          type: string
+          description: Target network interface
+          nullable: true
+        connectionType:
+          type: string
+          enum:
+            - ethernet
+            - serial
+            - modbus
+            - profinet
+            - profibus
+            - fieldbus
+            - wireless
+            - fiber
+          description: Physical connection type
+        protocol:
+          type: string
+          description: Communication protocol (TCP, UDP, Modbus, PROFINET, etc.)
+          nullable: true
+        port:
+          type: integer
+          minimum: 0
+          maximum: 65535
+          description: Network port number if applicable
+          nullable: true
+        vlanId:
+          type: integer
+          minimum: 1
+          maximum: 4094
+          description: VLAN identifier if applicable
+          nullable: true
+        bandwidthMbps:
+          type: number
+          description: Link bandwidth in Mbps
+          nullable: true
+        latencyMs:
+          type: number
+          description: Average latency in milliseconds
+          nullable: true
+        isSecure:
+          type: boolean
+          description: Whether connection uses encryption/authentication
+        encryptionType:
+          type: string
+          description: Encryption algorithm if applicable (AES-128, TLS 1.2, etc.)
+          nullable: true
+        discoveredAt:
+          type: string
+          format: date-time
+        lastSeenAt:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+          nullable: true
+
+    Alert:
+      type: object
+      required:
+        - id
+        - type
+        - severity
+        - title
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Alert identifier
+        type:
+          type: string
+          enum: [security, connectivity, compliance, performance, configuration]
+          description: Alert category
+        severity:
+          type: string
+          enum: [critical, high, medium, low, info]
+          description: Alert severity level
+        title:
+          type: string
+          description: Alert title/summary
+        description:
+          type: string
+          description: Detailed alert description
+          nullable: true
+        deviceId:
+          type: string
+          format: uuid
+          description: Affected device (if applicable)
+          nullable: true
+        connectionId:
+          type: string
+          format: uuid
+          description: Affected connection (if applicable)
+          nullable: true
+        acknowledged:
+          type: boolean
+          description: Whether alert has been acknowledged
+        acknowledgedBy:
+          type: string
+          description: User who acknowledged the alert
+          nullable: true
+        acknowledgedAt:
+          type: string
+          format: date-time
+          nullable: true
+        resolved:
+          type: boolean
+          description: Whether alert has been resolved
+        resolvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        remediation:
+          type: string
+          description: Suggested remediation steps
+          nullable: true
+        details:
+          type: object
+          description: Additional structured details
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    RiskAssessment:
+      type: object
+      required:
+        - deviceId
+        - overallScore
+      properties:
+        deviceId:
+          type: string
+          format: uuid
+          description: Device being assessed
+        overallScore:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Overall risk score (0=no risk, 100=critical risk)
+        vulnerabilityScore:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Score based on known vulnerabilities
+          nullable: true
+        configurationScore:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Score based on security configuration
+          nullable: true
+        exposureScore:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Score based on network exposure
+          nullable: true
+        complianceScore:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Score based on compliance status
+          nullable: true
+        factors:
+          type: array
+          description: Individual risk factors contributing to score
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              category:
+                type: string
+                enum: [vulnerability, configuration, exposure, compliance, threat]
+              score:
+                type: number
+                minimum: 0
+                maximum: 100
+              impact:
+                type: string
+                enum: [critical, high, medium, low]
+              evidence:
+                type: string
+        recommendations:
+          type: array
+          description: Suggested remediation actions
+          items:
+            type: string
+        assessedAt:
+          type: string
+          format: date-time
+          description: When assessment was performed
+
+    SecurityZone:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          enum: [process, control, supervisory, operations, enterprise, dmz, untrusted]
+        description:
+          type: string
+        purdueLevel:
+          type: integer
+        deviceCount:
+          type: integer
+
+    TopologyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Topology snapshot ID
+        timestamp:
+          type: string
+          format: date-time
+          description: When topology was captured
+        devices:
+          type: array
+          items:
+            $ref: '#/components/schemas/Device'
+          description: All devices in topology
+        connections:
+          type: array
+          items:
+            $ref: '#/components/schemas/Connection'
+          description: All connections in topology
+        zones:
+          type: array
+          items:
+            $ref: '#/components/schemas/SecurityZone'
+          description: Security zone definitions
+        metadata:
+          type: object
+          properties:
+            deviceCount:
+              type: integer
+            connectionCount:
+              type: integer
+            alertCount:
+              type: integer
+            criticalAlertCount:
+              type: integer
+
+    DeviceListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Device'
+        pagination:
+          type: object
+          properties:
+            limit:
+              type: integer
+            offset:
+              type: integer
+            total:
+              type: integer
+            hasMore:
+              type: boolean
+
+    ConnectionListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Connection'
+        pagination:
+          type: object
+          properties:
+            limit:
+              type: integer
+            offset:
+              type: integer
+            total:
+              type: integer
+            hasMore:
+              type: boolean
+
+    AlertListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Alert'
+        pagination:
+          type: object
+          properties:
+            limit:
+              type: integer
+            offset:
+              type: integer
+            total:
+              type: integer
+            hasMore:
+              type: boolean
+        summary:
+          type: object
+          properties:
+            total:
+              type: integer
+            critical:
+              type: integer
+            high:
+              type: integer
+            medium:
+              type: integer
+            low:
+              type: integer
+            info:
+              type: integer
+            acknowledged:
+              type: integer
+            unacknowledged:
+              type: integer
+
+    ZoneListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SecurityZone'
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type
+        message:
+          type: string
+          description: Human-readable error message
+        code:
+          type: integer
+          description: HTTP status code
+          nullable: true
+        details:
+          type: object
+          description: Additional error context
+          nullable: true
+
+security:
+  - ApiKeyAuth: []

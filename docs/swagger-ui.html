@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="SCADA/ICS Network Topology Discovery API - Interactive API Documentation">
+  <title>SCADA Topology API Documentation</title>
+
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui.css">
+  <style>
+    html {
+      box-sizing: border-box;
+      overflow: -moz-scrollbars-vertical;
+      overflow-y: scroll;
+    }
+
+    * {
+      box-sizing: inherit;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+      line-height: 1.5;
+      color: #3b4151;
+      background: #fafafa;
+    }
+
+    .swagger-ui {
+      max-width: 1500px;
+    }
+
+    /* Custom branding */
+    .topbar {
+      background-color: #1e3a8a;
+      padding: 10px 0;
+    }
+
+    .topbar a {
+      color: white !important;
+    }
+
+    .topbar-inner {
+      padding: 10px 20px;
+    }
+
+    .swagger-ui .topbar-inner a.logo span {
+      color: white;
+    }
+
+    /* Info section styling */
+    .swagger-ui .info {
+      margin: 50px 0;
+    }
+
+    .swagger-ui .info h1 {
+      color: #1e3a8a;
+      font-size: 36px;
+      margin: 0 0 20px 0;
+    }
+
+    .swagger-ui .info p {
+      color: #666;
+      font-size: 16px;
+    }
+
+    /* Operation styling */
+    .swagger-ui .opblock {
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      margin: 0 0 15px;
+      border-radius: 4px;
+    }
+
+    .swagger-ui .opblock.opblock-get {
+      border-left-color: #6fa8dc;
+    }
+
+    .swagger-ui .opblock.opblock-post {
+      border-left-color: #52c41a;
+    }
+
+    .swagger-ui .opblock.opblock-put {
+      border-left-color: #faad14;
+    }
+
+    .swagger-ui .opblock.opblock-delete {
+      border-left-color: #f5222d;
+    }
+
+    /* Tag styling */
+    .swagger-ui .model-box {
+      background: #f5f5f5;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+    }
+
+    /* Try it out button */
+    .swagger-ui .try-out > button {
+      background: #1e3a8a;
+      border: 1px solid #1e3a8a;
+      color: white;
+      font-weight: 600;
+      padding: 8px 20px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .swagger-ui .try-out > button:hover {
+      background: #1428a0;
+    }
+
+    /* Execute button */
+    .swagger-ui .execute > button {
+      background: #52c41a;
+      border: 1px solid #52c41a;
+      color: white;
+      font-weight: 600;
+      padding: 8px 20px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .swagger-ui .execute > button:hover {
+      background: #45a049;
+    }
+
+    /* Response box */
+    .swagger-ui .response-col_status {
+      font-weight: 600;
+    }
+
+    .swagger-ui pre {
+      background: #f5f5f5;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+    }
+
+    /* Section headers */
+    .swagger-ui h2 {
+      color: #1e3a8a;
+      margin-top: 40px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e8e8e8;
+      padding-bottom: 10px;
+    }
+
+    /* Authentication scheme styling */
+    .swagger-ui .auth-btn-wrapper {
+      margin: 20px 0;
+    }
+
+    .swagger-ui .auth-btn {
+      background: #1e3a8a;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .swagger-ui .auth-btn:hover {
+      background: #1428a0;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .swagger-ui {
+        padding: 10px;
+      }
+
+      .swagger-ui .info h1 {
+        font-size: 24px;
+      }
+
+      .swagger-ui .response-col {
+        min-width: 100%;
+      }
+    }
+
+    /* Code block styling */
+    .swagger-ui .body-param__text {
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    /* Modal styling for auth */
+    .swagger-ui .dialog-ux .modal-ux {
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .swagger-ui .dialog-ux .modal-ux-header {
+      background: #1e3a8a;
+      color: white;
+      padding: 20px;
+      border-radius: 8px 8px 0 0;
+    }
+
+    /* Scheme selector */
+    .swagger-ui .scheme-container {
+      background: #f5f5f5;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    /* Example values */
+    .swagger-ui .example {
+      background: #f0f4f8;
+      border-left: 3px solid #1e3a8a;
+      padding: 10px 15px;
+      margin: 10px 0;
+      border-radius: 4px;
+    }
+
+    /* Success colors */
+    .response-col_status--2XX {
+      color: #52c41a;
+      font-weight: 600;
+    }
+
+    /* Error colors */
+    .response-col_status--4XX,
+    .response-col_status--5XX {
+      color: #f5222d;
+      font-weight: 600;
+    }
+
+    /* Parameter table */
+    .swagger-ui table {
+      border-collapse: collapse;
+      border: 1px solid #ddd;
+    }
+
+    .swagger-ui table th {
+      background: #fafafa;
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    .swagger-ui table td {
+      border: 1px solid #ddd;
+      padding: 12px;
+    }
+
+    .swagger-ui table tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+
+    /* Loading state */
+    .loading::after {
+      content: " ...";
+      animation: dots 1.5s steps(4, end) infinite;
+    }
+
+    @keyframes dots {
+      0%, 20% {
+        color: rgba(0, 0, 0, 0);
+        text-shadow: 0.25em 0 0 rgba(0, 0, 0, 0.8), 0.5em 0 0 rgba(0, 0, 0, 0.8);
+      }
+      40% {
+        color: rgba(0, 0, 0, 0);
+        text-shadow: 0.25em 0 0 rgba(0, 0, 0, 0.8), 0.5em 0 0 rgba(0, 0, 0, 0.8);
+      }
+      60% {
+        text-shadow: 0.25em 0 0 rgba(0, 0, 0, 0.8), 0.5em 0 0 rgba(0, 0, 0, 0.8);
+      }
+      80%, 100% {
+        text-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui.bundle.js" charset="UTF-8"></script>
+  <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui-standalone-preset.js" charset="UTF-8"></script>
+
+  <script>
+    window.onload = function() {
+      // Determine the correct URL for the OpenAPI spec
+      const specUrl = new URL('./openapi.yaml', window.location.href).href;
+
+      // Initialize Swagger UI
+      const ui = SwaggerUIBundle({
+        url: specUrl,
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: 'BaseLayout',
+
+        // Try-it-out settings
+        tryItOutEnabled: true,
+        requestInterceptor: function(request) {
+          // Add custom headers or modify requests if needed
+          console.log('Request:', request);
+          return request;
+        },
+        responseInterceptor: function(response) {
+          // Add custom response handling if needed
+          console.log('Response:', response);
+          return response;
+        },
+
+        // Configure onComplete callback
+        onComplete: function() {
+          console.log('Swagger UI loaded successfully');
+
+          // Add custom event listeners
+          document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('try-out')) {
+              console.log('Try it out button clicked');
+            }
+          });
+        }
+      });
+
+      // Expose SwaggerUIBundle to window for testing
+      window.ui = ui;
+
+      // Handle errors
+      window.addEventListener('error', function(event) {
+        console.error('Error loading Swagger UI:', event.error);
+      });
+    };
+
+    // Helper function to get current API key from localStorage
+    function getApiKey() {
+      return localStorage.getItem('scada-api-key') || '';
+    }
+
+    // Helper function to save API key to localStorage
+    function setApiKey(key) {
+      localStorage.setItem('scada-api-key', key);
+    }
+
+    // Inject API key from localStorage into requests
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(function() {
+        const apiKey = getApiKey();
+        if (apiKey) {
+          // Try to set the API key input
+          const apiKeyInput = document.querySelector('.auth-btn');
+          if (apiKeyInput) {
+            console.log('API key loaded from localStorage');
+          }
+        }
+      }, 1000);
+    });
+  </script>
+
+  <!-- Additional help text -->
+  <div style="margin-top: 40px; padding: 0 20px 20px;">
+    <h3 style="color: #1e3a8a; margin-top: 30px;">Getting Started</h3>
+    <ol style="color: #666; line-height: 1.8;">
+      <li><strong>Obtain API Key:</strong> Contact your administrator to get an API key for authentication.</li>
+      <li><strong>Set Authentication:</strong> Click the "Authorize" button and enter your API key to test endpoints.</li>
+      <li><strong>Try Endpoints:</strong> Click on any endpoint, then "Try it out" to test the API directly from this UI.</li>
+      <li><strong>View Examples:</strong> Each endpoint includes request/response examples for reference.</li>
+      <li><strong>Check Response Codes:</strong> Review the response schemas to understand different status codes.</li>
+    </ol>
+
+    <h3 style="color: #1e3a8a; margin-top: 30px;">API Features</h3>
+    <ul style="color: #666;">
+      <li><strong>Authentication:</strong> All endpoints require an API key passed in the X-API-Key header</li>
+      <li><strong>Rate Limiting:</strong> 100 requests/minute per API key (standard), 1000 requests/minute (premium)</li>
+      <li><strong>Pagination:</strong> List endpoints support limit and offset parameters</li>
+      <li><strong>Filtering:</strong> Use query parameters to filter results by type, status, severity, etc.</li>
+      <li><strong>Real-time Data:</strong> Topology, devices, connections, and alerts are updated in real-time</li>
+      <li><strong>Export Formats:</strong> Support for JSON, CSV, XML, and GraphML exports</li>
+    </ul>
+
+    <h3 style="color: #1e3a8a; margin-top: 30px;">Support</h3>
+    <p style="color: #666;">
+      For issues, questions, or feedback, please contact the support team at <strong>support@example.com</strong> or visit
+      <a href="https://github.com/company/scada-topology" style="color: #1e3a8a; text-decoration: none;">our GitHub repository</a>.
+    </p>
+
+    <h3 style="color: #1e3a8a; margin-top: 30px;">API Documentation</h3>
+    <p style="color: #666;">
+      For detailed documentation including code examples, WebSocket integration, and deployment guides,
+      please refer to the <a href="./api.md" style="color: #1e3a8a; text-decoration: none;">API Reference Guide</a>.
+    </p>
+  </div>
+</body>
+</html>
