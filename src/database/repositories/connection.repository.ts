@@ -5,6 +5,7 @@
 import { BaseRepository, PaginatedResult } from './base.repository';
 import { Connection, ConnectionType } from '../../utils/types';
 import { logger } from '../../utils/logger';
+import { v4 as uuidv4 } from 'uuid';
 
 // ============================================================================
 // Types
@@ -101,11 +102,20 @@ export class ConnectionRepository extends BaseRepository<Connection, CreateConne
     }
 
     /**
+     * Override create to convert database row to entity
+     */
+    async create(data: CreateConnectionDTO): Promise<Connection> {
+        const processedData = this.processCreateData(data);
+        const row = await this.db.insert<DBConnection>(this.tableName, processedData);
+        return this.toEntity(row);
+    }
+
+    /**
      * Convert create DTO to database columns
      */
     protected processCreateData(data: CreateConnectionDTO): Record<string, unknown> {
         return {
-            id: data.id,
+            id: data.id || uuidv4(),
             source_device_id: data.sourceDeviceId,
             target_device_id: data.targetDeviceId,
             source_interface: data.sourceInterface,

@@ -67,7 +67,7 @@ describe('Lambda Handlers Integration', () => {
                 ],
             };
 
-            await expect(ingestHandler(event as any, {} as any, {} as any)).resolves.not.toThrow();
+            await expect((ingestHandler as any)(event)).resolves.not.toThrow();
         });
 
         it('should handle empty records', async () => {
@@ -75,7 +75,7 @@ describe('Lambda Handlers Integration', () => {
                 records: [],
             };
 
-            await expect(ingestHandler(event as any, {} as any, {} as any)).resolves.not.toThrow();
+            await expect((ingestHandler as any)(event)).resolves.not.toThrow();
         });
     });
 
@@ -99,7 +99,7 @@ describe('Lambda Handlers Integration', () => {
                 ],
             };
 
-            await expect(processHandler(event as any, {} as any, () => { })).resolves.not.toThrow();
+            await expect((processHandler as any)(event)).resolves.toBeUndefined();
         });
 
         it('should handle malformed message gracefully', async () => {
@@ -113,7 +113,7 @@ describe('Lambda Handlers Integration', () => {
             };
 
             // Should not throw, but log error
-            await expect(processHandler(event as any, {} as any, () => { })).resolves.not.toThrow();
+            await expect((processHandler as any)(event)).resolves.toBeUndefined();
         });
     });
 
@@ -126,7 +126,7 @@ describe('Lambda Handlers Integration', () => {
                 pathParameters: null,
             };
 
-            const result = await queryHandler(event as any, {} as any, () => { });
+            const result = await (queryHandler as any)(event);
 
             expect(result).toBeDefined();
             expect(result?.statusCode).toBe(200);
@@ -142,7 +142,7 @@ describe('Lambda Handlers Integration', () => {
                 pathParameters: null,
             };
 
-            const result = await queryHandler(event as any, {} as any, () => { });
+            const result = await (queryHandler as any)(event);
 
             expect(result).toBeDefined();
             expect(result?.statusCode).toBe(200);
@@ -163,7 +163,7 @@ describe('Lambda Handlers Integration', () => {
                 pathParameters: null,
             };
 
-            const result = await queryHandler(event as any, {} as any, () => { });
+            const result = await (queryHandler as any)(event);
 
             expect(result?.statusCode).toBe(200);
             const body = JSON.parse(result?.body || '{}');
@@ -181,7 +181,7 @@ describe('Lambda Handlers Integration', () => {
                 pathParameters: { deviceId: 'nonexistent' },
             };
 
-            const result = await queryHandler(event as any, {} as any, () => { });
+            const result = await (queryHandler as any)(event);
 
             expect(result?.statusCode).toBe(404);
         });
@@ -194,7 +194,7 @@ describe('Lambda Handlers Integration', () => {
                 pathParameters: null,
             };
 
-            const result = await queryHandler(event as any, {} as any, () => { });
+            const result = await (queryHandler as any)(event);
 
             expect(result?.statusCode).toBe(200);
         });
@@ -207,7 +207,7 @@ describe('Lambda Handlers Integration', () => {
                 pathParameters: null,
             };
 
-            const result = await queryHandler(event as any, {} as any, () => { });
+            const result = await (queryHandler as any)(event);
 
             expect(result?.statusCode).toBe(404);
         });
@@ -220,7 +220,7 @@ describe('Lambda Handlers Integration', () => {
                 pathParameters: null,
             };
 
-            const result = await queryHandler(event as any, {} as any, () => { });
+            const result = await (queryHandler as any)(event);
 
             expect(result?.statusCode).toBe(200);
         });
@@ -237,7 +237,7 @@ describe('Lambda Handlers Integration', () => {
                 pathParameters: null,
             };
 
-            const result = await queryHandler(event as any, {} as any, () => { });
+            const result = await (queryHandler as any)(event);
 
             expect(result?.statusCode).toBe(500);
         });

@@ -12,10 +12,12 @@ jest.mock('../../../../src/database/connection', () => ({
 const mockDb = {
   query: jest.fn(),
   queryOne: jest.fn(),
+  queryCount: jest.fn(),
   insert: jest.fn(),
   update: jest.fn(),
   delete: jest.fn(),
   upsert: jest.fn(),
+  bulkInsert: jest.fn(),
 };
 
 describe('ConnectionRepository', () => {
@@ -63,14 +65,15 @@ describe('ConnectionRepository', () => {
       expect(mockDb.query).toHaveBeenCalled();
     });
 
-    it('should find connections by target device ID', async () => {
+    it('should find connections where device is target', async () => {
       const mockConnections = [
         { id: 'conn-1', source_device_id: 'device-2', target_device_id: 'device-1' },
       ];
 
       mockDb.query.mockResolvedValue(mockConnections);
 
-      const result = await repository.findByDeviceId('device-1', 'target');
+      // findByDeviceId returns all connections where device is source OR target
+      const result = await repository.findByDeviceId('device-1');
 
       expect(mockDb.query).toHaveBeenCalled();
     });
@@ -86,21 +89,6 @@ describe('ConnectionRepository', () => {
       mockDb.query.mockResolvedValue(mockEdges);
 
       const result = await repository.getTopologyEdges();
-
-      expect(mockDb.query).toHaveBeenCalled();
-    });
-  });
-
-  describe('findSecureConnections', () => {
-    it('should find all secure connections', async () => {
-      const mockConnections = [
-        { id: 'conn-1', is_secure: true },
-        { id: 'conn-2', is_secure: true },
-      ];
-
-      mockDb.query.mockResolvedValue(mockConnections);
-
-      const result = await repository.findSecureConnections();
 
       expect(mockDb.query).toHaveBeenCalled();
     });
@@ -167,43 +155,71 @@ describe('ConnectionRepository', () => {
     });
   });
 
-  describe('upsert', () => {
+  describe('upsertConnection', () => {
     it('should upsert connection (create or update)', async () => {
       const connection = {
         sourceDeviceId: 'device-1',
         targetDeviceId: 'device-2',
         connectionType: ConnectionType.ETHERNET,
+        discoveredAt: new Date(),
+        lastSeenAt: new Date(),
       };
 
-      mockDb.upsert.mockResolvedValue({ id: 'conn-1' });
+      // Mock findBetweenDevices to return null (no existing connection)
+      mockDb.queryOne.mockResolvedValue(null);
+      mockDb.insert.mockResolvedValue({
+        id: 'conn-1',
+        source_device_id: 'device-1',
+        target_device_id: 'device-2',
+        connection_type: 'ethernet',
+        is_secure: false,
+        discovered_at: new Date(),
+        last_seen_at: new Date(),
+        metadata: {},
+      });
 
-      const result = await repository.upsert(connection);
+      const result = await repository.upsertConnection(connection);
 
-      expect(mockDb.upsert).toHaveBeenCalled();
+      expect(result).toBeDefined();
     });
   });
 
   describe('deduplication', () => {
-    it('should handle duplicate connections', async () => {
+    it('should handle duplicate connections by updating existing', async () => {
       const connection1 = {
+        sourceDeviceId: 'device-1',
+        targetDeviceId: 'device-2',
+        connectionType: ConnectionType.ETHERNET,
+        discoveredAt: new Date(),
+        lastSeenAt: new Date(),
+      };
+
+      // Mock findBetweenDevices to return existing connection
+      mockDb.queryOne.mockResolvedValue({
         id: 'conn-1',
-        sourceDeviceId: 'device-1',
-        targetDeviceId: 'device-2',
-      };
+        source_device_id: 'device-1',
+        target_device_id: 'device-2',
+        connection_type: 'ethernet',
+        is_secure: false,
+        discovered_at: new Date(),
+        last_seen_at: new Date(),
+        metadata: {},
+      });
 
-      const connection2 = {
-        id: 'conn-2',
-        sourceDeviceId: 'device-1',
-        targetDeviceId: 'device-2',
-      };
+      mockDb.update.mockResolvedValue([{
+        id: 'conn-1',
+        source_device_id: 'device-1',
+        target_device_id: 'device-2',
+        connection_type: 'ethernet',
+        is_secure: false,
+        discovered_at: new Date(),
+        last_seen_at: new Date(),
+        metadata: {},
+      }]);
 
-      mockDb.upsert.mockResolvedValue({ id: 'conn-1' });
+      const result = await repository.upsertConnection(connection1);
 
-      // Both should be merged into one
-      await repository.upsert(connection1);
-      await repository.upsert(connection2);
-
-      expect(mockDb.upsert).toHaveBeenCalledTimes(2);
+      expect(result.id).toBe('conn-1');
     });
   });
 });

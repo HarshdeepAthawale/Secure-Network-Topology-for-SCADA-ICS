@@ -189,3 +189,4 @@ output "process_function_arn" { value = aws_lambda_function.process.arn }
 output "query_function_arn" { value = aws_lambda_function.query.arn }
 output "function_names" { value = [aws_lambda_function.ingest.function_name, aws_lambda_function.process.function_name, aws_lambda_function.query.function_name] }
 output "api_endpoint" { value = aws_apigatewayv2_stage.main.invoke_url }
+output "api_name" { value = aws_apigatewayv2_api.main.name }

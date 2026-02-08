@@ -115,8 +115,7 @@ describe('DeviceRepository', () => {
                 expect.objectContaining({
                     name: 'HMI-001',
                     type: DeviceType.HMI,
-                }),
-                '*'
+                })
             );
         });
     });

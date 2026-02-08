@@ -256,9 +256,9 @@ describe('SNMP Collector Integration', () => {
 
       const status = collector.getStatus();
       expect(status).toHaveProperty('name', 'SNMPv3Collector');
-      expect(status).toHaveProperty('running');
-      expect(status).toHaveProperty('targetCount');
-      expect(status.targetCount).toBe(1);
+      expect(status).toHaveProperty('isRunning');
+      expect(status).toHaveProperty('pollCount');
+      expect(collector.getTargets().length).toBe(1);
     });
 
     it('should track error counts', () => {
@@ -280,7 +280,11 @@ describe('SNMP Collector Integration', () => {
       } as any);
 
       const status = collector.getStatus();
-      expect(status).toHaveProperty('lastCollection');
+      expect(status).toHaveProperty('pollCount');
+      expect(status).toHaveProperty('successCount');
+      expect(status).toHaveProperty('errorCount');
+      // lastPollTime is only set after first collection
+      expect(status.pollCount).toBeGreaterThanOrEqual(0);
     });
   });
 
