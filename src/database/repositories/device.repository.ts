@@ -163,7 +163,7 @@ export class DeviceRepository extends BaseRepository<Device, CreateDeviceDTO, Up
 
         // Load interfaces
         const interfaces = await this.rawQuery<NetworkInterface>(
-            `SELECT * FROM interfaces WHERE device_id = $1`,
+            `SELECT * FROM network_interfaces WHERE device_id = $1`,
             [id]
         );
 
@@ -299,7 +299,7 @@ export class DeviceRepository extends BaseRepository<Device, CreateDeviceDTO, Up
     async findByMacAddress(macAddress: string): Promise<Device | null> {
         const row = await this.db.queryOne<DBDevice>(`
       SELECT d.* FROM ${this.tableName} d
-      INNER JOIN interfaces i ON i.device_id = d.id
+      INNER JOIN network_interfaces i ON i.device_id = d.id
       WHERE i.mac_address = $1
       LIMIT 1
     `, [macAddress.toLowerCase()]);
@@ -313,7 +313,7 @@ export class DeviceRepository extends BaseRepository<Device, CreateDeviceDTO, Up
     async findByIpAddress(ipAddress: string): Promise<Device | null> {
         const row = await this.db.queryOne<DBDevice>(`
       SELECT d.* FROM ${this.tableName} d
-      INNER JOIN interfaces i ON i.device_id = d.id
+      INNER JOIN network_interfaces i ON i.device_id = d.id
       WHERE i.ip_address = $1
       LIMIT 1
     `, [ipAddress]);

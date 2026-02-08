@@ -13,6 +13,9 @@ groups:
         data:
           - refId: A
             datasourceUid: postgres
+            relativeTimeRange:
+              from: 300
+              to: 0
             model:
               rawSql: "SELECT COUNT(*) as value FROM alerts WHERE severity = 'critical' AND resolved = false AND created_at > NOW() - INTERVAL '5 minutes'"
         for: 0m
@@ -31,6 +34,9 @@ groups:
         data:
           - refId: A
             datasourceUid: postgres
+            relativeTimeRange:
+              from: 3600
+              to: 0
             model:
               rawSql: "SELECT COUNT(*) as value FROM alerts WHERE severity IN ('critical', 'high') AND resolved = false AND created_at > NOW() - INTERVAL '1 hour'"
         for: 5m
@@ -47,6 +53,9 @@ groups:
         data:
           - refId: A
             datasourceUid: postgres
+            relativeTimeRange:
+              from: 300
+              to: 0
             model:
               rawSql: "SELECT COUNT(*) as value FROM devices WHERE status = 'offline' AND last_seen_at < NOW() - INTERVAL '5 minutes'"
         for: 5m
@@ -63,6 +72,9 @@ groups:
         data:
           - refId: A
             datasourceUid: postgres
+            relativeTimeRange:
+              from: 600
+              to: 0
             model:
               rawSql: "SELECT COUNT(*) as value FROM connections c JOIN devices d ON c.source_device_id = d.id WHERE c.is_secure = false AND d.purdue_level IN ('0', '1', '2') AND c.last_seen_at > NOW() - INTERVAL '10 minutes'"
         for: 0m
@@ -79,6 +91,9 @@ groups:
         data:
           - refId: A
             datasourceUid: postgres
+            relativeTimeRange:
+              from: 600
+              to: 0
             model:
               rawSql: |
                 SELECT COUNT(*) as value FROM connections c
@@ -101,6 +116,9 @@ groups:
         data:
           - refId: A
             datasourceUid: postgres
+            relativeTimeRange:
+              from: 300
+              to: 0
             model:
               rawSql: "SELECT EXTRACT(EPOCH FROM (NOW() - MAX(timestamp))) as value FROM telemetry"
         for: 5m
@@ -121,6 +139,9 @@ groups:
         data:
           - refId: A
             datasourceUid: postgres
+            relativeTimeRange:
+              from: 3600
+              to: 0
             model:
               rawSql: "SELECT COUNT(*) as value FROM devices WHERE type = 'unknown' OR vendor IS NULL"
         for: 0m
@@ -137,6 +158,9 @@ groups:
         data:
           - refId: A
             datasourceUid: postgres
+            relativeTimeRange:
+              from: 3600
+              to: 0
             model:
               rawSql: |
                 SELECT COUNT(*) as value FROM devices d

@@ -1,114 +1,414 @@
 {
-  "dashboard": {
-    "title": "SCADA Topology Overview",
-    "uid": "scada-topology-overview",
-    "tags": ["scada", "topology", "ot-security"],
-    "timezone": "browser",
-    "refresh": "30s",
-    "panels": [
+  "annotations": {
+    "list": [
       {
-        "id": 1,
-        "title": "Device Count by Purdue Level",
-        "type": "piechart",
-        "gridPos": { "x": 0, "y": 0, "w": 8, "h": 8 },
-        "datasource": "PostgreSQL",
-        "targets": [{
-          "rawSql": "SELECT purdue_level as label, COUNT(*) as value FROM devices GROUP BY purdue_level",
-          "format": "table"
-        }]
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": true,
+  "panels": [
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
       },
-      {
-        "id": 2,
-        "title": "Device Status",
-        "type": "stat",
-        "gridPos": { "x": 8, "y": 0, "w": 8, "h": 4 },
-        "datasource": "PostgreSQL",
-        "targets": [{
-          "rawSql": "SELECT status, COUNT(*) as count FROM devices GROUP BY status",
-          "format": "table"
-        }],
-        "options": {
-          "colorMode": "background",
-          "graphMode": "none"
-        }
-      },
-      {
-        "id": 3,
-        "title": "Active Alerts",
-        "type": "stat",
-        "gridPos": { "x": 16, "y": 0, "w": 8, "h": 4 },
-        "datasource": "PostgreSQL",
-        "targets": [{
-          "rawSql": "SELECT severity, COUNT(*) FROM alerts WHERE resolved = false GROUP BY severity",
-          "format": "table"
-        }],
-        "options": {
-          "colorMode": "value"
-        }
-      },
-      {
-        "id": 4,
-        "title": "Network Topology",
-        "type": "nodeGraph",
-        "gridPos": { "x": 0, "y": 8, "w": 16, "h": 12 },
-        "datasource": "PostgreSQL",
-        "targets": [
-          {
-            "rawSql": "SELECT id, name as title, type as subtitle, purdue_level::text as mainstat FROM devices",
-            "format": "table",
-            "refId": "nodes"
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
           },
+          "custom": {
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 8 },
+      "id": 1,
+      "options": {
+        "displayLabels": ["name", "percent"],
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "values": ["value"]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "values": false,
+          "fields": "",
+          "calcs": ["lastNotNull"]
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [{
+        "datasource": { "type": "postgres", "uid": "postgres" },
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT CASE WHEN purdue_level::text = '0' THEN 'L0-Process' WHEN purdue_level::text = '1' THEN 'L1-Control' WHEN purdue_level::text = '2' THEN 'L2-Supervisory' WHEN purdue_level::text = '3' THEN 'L3-Operations' WHEN purdue_level::text = '4' THEN 'L4-Enterprise' WHEN purdue_level::text = '5' THEN 'L5-Enterprise' WHEN purdue_level::text = '99' THEN 'DMZ' END as level, COUNT(*) as count FROM devices GROUP BY purdue_level ORDER BY purdue_level",
+        "refId": "A"
+      }],
+      "title": "Device Count by Purdue Level",
+      "type": "piechart"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "values": false, "fields": "", "calcs": ["lastNotNull"] },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [{
+        "datasource": { "type": "postgres", "uid": "postgres" },
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT COUNT(*) as \"Offline Devices\" FROM devices WHERE status = 'offline'",
+        "refId": "A"
+      }],
+      "title": "Offline Devices",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
+      "id": 9,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "values": false, "fields": "", "calcs": ["lastNotNull"] },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [{
+        "datasource": { "type": "postgres", "uid": "postgres" },
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT COUNT(*) as \"Total Devices\" FROM devices",
+        "refId": "A"
+      }],
+      "title": "Total Devices",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "x": 8, "y": 4, "w": 4, "h": 4 },
+      "id": 10,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "values": false, "fields": "", "calcs": ["lastNotNull"] },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [{
+        "datasource": { "type": "postgres", "uid": "postgres" },
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT COUNT(*) as \"Total Connections\" FROM connections",
+        "refId": "A"
+      }],
+      "title": "Total Connections",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "x": 12, "y": 4, "w": 4, "h": 4 },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "values": false, "fields": "", "calcs": ["lastNotNull"] },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [{
+        "datasource": { "type": "postgres", "uid": "postgres" },
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT COUNT(*) as \"Active Alerts\" FROM alerts WHERE resolved = false",
+        "refId": "A"
+      }],
+      "title": "Active Alerts",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "hideFrom": { "tooltip": false, "viz": false, "legend": false } },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": { "x": 16, "y": 0, "w": 8, "h": 8 },
+      "id": 7,
+      "options": {
+        "displayLabels": ["name", "percent"],
+        "legend": { "displayMode": "table", "placement": "right", "values": ["value"] },
+        "pieType": "pie",
+        "reduceOptions": { "values": false, "fields": "", "calcs": ["lastNotNull"] },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [{
+        "datasource": { "type": "postgres", "uid": "postgres" },
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT CASE WHEN is_secure THEN 'Secure' ELSE 'Insecure' END as security, COUNT(*) as count FROM connections GROUP BY is_secure",
+        "refId": "A"
+      }],
+      "title": "Connection Security",
+      "type": "piechart"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "mappings": [],
+          "noValue": "No data"
+        },
+        "overrides": []
+      },
+      "gridPos": { "x": 0, "y": 8, "w": 16, "h": 12 },
+      "id": 4,
+      "options": {
+        "nodeGraphPanel": {
+          "nodeSize": 15,
+          "textMode": "value and name"
+        }
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "postgres" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT d.id, d.name as title, d.type::text as subtitle, CASE WHEN d.purdue_level::text = '0' THEN 'L0' WHEN d.purdue_level::text = '1' THEN 'L1' WHEN d.purdue_level::text = '2' THEN 'L2' WHEN d.purdue_level::text = '3' THEN 'L3' WHEN d.purdue_level::text = '4' THEN 'L4' WHEN d.purdue_level::text = '5' THEN 'L5' WHEN d.purdue_level::text = '99' THEN 'DMZ' END as mainstat FROM devices d ORDER BY d.purdue_level, d.name",
+          "refId": "nodes"
+        },
+        {
+          "datasource": { "type": "postgres", "uid": "postgres" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT c.id, c.source_device_id as source, c.target_device_id as target, c.protocol as mainstat FROM connections c",
+          "refId": "edges"
+        }
+      ],
+      "title": "Network Topology Graph",
+      "type": "nodeGraph"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": [
           {
-            "rawSql": "SELECT id, source_device_id as source, target_device_id as target FROM connections",
-            "format": "table",
-            "refId": "edges"
+            "matcher": { "id": "byName", "options": "severity" },
+            "properties": [
+              { "id": "custom.displayMode", "value": "color-background" },
+              {
+                "id": "mappings",
+                "value": [{
+                  "options": {
+                    "critical": { "color": "red", "index": 0 },
+                    "high": { "color": "orange", "index": 1 },
+                    "medium": { "color": "yellow", "index": 2 },
+                    "low": { "color": "green", "index": 3 }
+                  },
+                  "type": "value"
+                }]
+              }
+            ]
           }
         ]
       },
-      {
-        "id": 5,
-        "title": "Recent Alerts",
-        "type": "table",
-        "gridPos": { "x": 16, "y": 4, "w": 8, "h": 16 },
-        "datasource": "PostgreSQL",
-        "targets": [{
-          "rawSql": "SELECT created_at, severity, title, device_id FROM alerts WHERE resolved = false ORDER BY created_at DESC LIMIT 20",
-          "format": "table"
-        }]
+      "gridPos": { "x": 16, "y": 8, "w": 8, "h": 12 },
+      "id": 5,
+      "options": {
+        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
+        "showHeader": true,
+        "sortBy": [{ "displayName": "created_at", "desc": true }]
       },
-      {
-        "id": 6,
-        "title": "Telemetry Rate",
-        "type": "timeseries",
-        "gridPos": { "x": 0, "y": 20, "w": 12, "h": 8 },
-        "datasource": "PostgreSQL",
-        "targets": [{
-          "rawSql": "SELECT date_trunc('minute', timestamp) as time, source, COUNT(*) as count FROM telemetry WHERE timestamp > NOW() - INTERVAL '1 hour' GROUP BY 1, 2 ORDER BY 1",
-          "format": "time_series"
-        }]
+      "pluginVersion": "10.2.0",
+      "targets": [{
+        "datasource": { "type": "postgres", "uid": "postgres" },
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT a.created_at, a.severity, a.title, d.name as device FROM alerts a LEFT JOIN devices d ON a.device_id = d.id WHERE a.resolved = false ORDER BY a.created_at DESC LIMIT 20",
+        "refId": "A"
+      }],
+      "title": "Recent Alerts",
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto",
+            "drawStyle": "bars", "fillOpacity": 100, "gradientMode": "none",
+            "hideFrom": { "tooltip": false, "viz": false, "legend": false },
+            "lineWidth": 1, "pointSize": 5, "showPoints": "never",
+            "stacking": { "group": "A", "mode": "normal" }
+          },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
       },
-      {
-        "id": 7,
-        "title": "Connection Security",
-        "type": "piechart",
-        "gridPos": { "x": 12, "y": 20, "w": 6, "h": 8 },
-        "datasource": "PostgreSQL",
-        "targets": [{
-          "rawSql": "SELECT CASE WHEN is_secure THEN 'Secure' ELSE 'Insecure' END as label, COUNT(*) as value FROM connections GROUP BY is_secure",
-          "format": "table"
-        }]
+      "gridPos": { "x": 0, "y": 20, "w": 12, "h": 8 },
+      "id": 8,
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "none" }
       },
-      {
-        "id": 8,
-        "title": "Top Vendors",
-        "type": "bargauge",
-        "gridPos": { "x": 18, "y": 20, "w": 6, "h": 8 },
-        "datasource": "PostgreSQL",
-        "targets": [{
-          "rawSql": "SELECT COALESCE(vendor, 'Unknown') as vendor, COUNT(*) as count FROM devices GROUP BY vendor ORDER BY count DESC LIMIT 10",
-          "format": "table"
-        }]
-      }
-    ]
-  }
+      "targets": [{
+        "datasource": { "type": "postgres", "uid": "postgres" },
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT COALESCE(vendor, 'Unknown') as vendor, COUNT(*) as count FROM devices GROUP BY vendor ORDER BY count DESC LIMIT 10",
+        "refId": "A"
+      }],
+      "title": "Top Vendors",
+      "type": "barchart"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "hideFrom": { "tooltip": false, "viz": false, "legend": false } },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": { "x": 12, "y": 20, "w": 12, "h": 8 },
+      "id": 6,
+      "options": {
+        "displayLabels": ["name", "percent"],
+        "legend": { "displayMode": "table", "placement": "right", "values": ["value"] },
+        "pieType": "donut",
+        "reduceOptions": { "values": false, "fields": "", "calcs": ["lastNotNull"] },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [{
+        "datasource": { "type": "postgres", "uid": "postgres" },
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT status, COUNT(*) as count FROM devices GROUP BY status ORDER BY count DESC",
+        "refId": "A"
+      }],
+      "title": "Device Status Distribution",
+      "type": "piechart"
+    }
+  ],
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["scada", "topology", "ot-security"],
+  "templating": { "list": [] },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "SCADA Topology Overview",
+  "uid": "scada-topology-overview",
+  "version": 1,
+  "weekStart": ""
 }
