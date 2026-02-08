@@ -5,6 +5,7 @@
 import { BaseRepository, FindOptions, PaginatedResult } from './base.repository';
 import { Device, DeviceType, DeviceStatus, PurdueLevel, SecurityZone, NetworkInterface } from '../../utils/types';
 import { logger } from '../../utils/logger';
+import { v4 as uuidv4 } from 'uuid';
 
 // ============================================================================
 // Types
@@ -113,7 +114,7 @@ export class DeviceRepository extends BaseRepository<Device, CreateDeviceDTO, Up
      */
     protected processCreateData(data: CreateDeviceDTO): Record<string, unknown> {
         return {
-            id: data.id,
+            id: data.id || uuidv4(),
             name: data.name,
             hostname: data.hostname,
             type: data.type,
@@ -189,6 +190,15 @@ export class DeviceRepository extends BaseRepository<Device, CreateDeviceDTO, Up
     async findAll(options: FindOptions = {}): Promise<Device[]> {
         const rows = await super.findAll(options) as unknown as DBDevice[];
         return rows.map(row => this.toEntity(row));
+    }
+
+    /**
+     * Override create to convert database row to entity
+     */
+    async create(data: CreateDeviceDTO): Promise<Device> {
+        const processedData = this.processCreateData(data);
+        const row = await this.db.insert<DBDevice>(this.tableName, processedData);
+        return this.toEntity(row);
     }
 
     /**

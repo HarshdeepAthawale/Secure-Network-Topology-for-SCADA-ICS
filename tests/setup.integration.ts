@@ -125,17 +125,19 @@ async function cleanupTestData() {
       CREATE TABLE IF NOT EXISTS alerts (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         device_id UUID REFERENCES devices(id) ON DELETE SET NULL,
+        connection_id UUID,
         type VARCHAR(50) NOT NULL,
         severity VARCHAR(20) NOT NULL,
-        message TEXT NOT NULL,
+        title VARCHAR(255) NOT NULL,
         description TEXT,
+        details JSONB DEFAULT '{}',
+        remediation TEXT,
         acknowledged BOOLEAN DEFAULT FALSE,
         acknowledged_at TIMESTAMP,
         acknowledged_by VARCHAR(255),
         resolved BOOLEAN DEFAULT FALSE,
         resolved_at TIMESTAMP,
         resolved_by VARCHAR(255),
-        metadata JSONB DEFAULT '{}',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -147,8 +149,7 @@ async function cleanupTestData() {
         payload JSONB NOT NULL,
         processed BOOLEAN DEFAULT FALSE,
         processed_at TIMESTAMP,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        INDEX idx_collector_source (collector, source)
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
       CREATE TABLE IF NOT EXISTS topology_snapshots (

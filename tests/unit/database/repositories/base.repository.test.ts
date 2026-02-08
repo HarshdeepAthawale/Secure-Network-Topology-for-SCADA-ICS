@@ -16,14 +16,23 @@ const mockDb = {
   update: jest.fn(),
   delete: jest.fn(),
   transaction: jest.fn(),
+  bulkInsert: jest.fn(),
+  upsert: jest.fn(),
 };
 
+// Create a concrete implementation for testing
+class TestRepository extends BaseRepository<{ id: string; name: string }> {
+  constructor() {
+    super('test_table');
+  }
+}
+
 describe('BaseRepository', () => {
-  let repository: BaseRepository<any>;
+  let repository: TestRepository;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    repository = new BaseRepository('test_table');
+    repository = new TestRepository();
   });
 
   describe('findAll', () => {
@@ -80,21 +89,39 @@ describe('BaseRepository', () => {
     it('should update record', async () => {
       const updates = { name: 'Updated Name' };
 
-      mockDb.update.mockResolvedValue({ id: '1', ...updates });
+      mockDb.update.mockResolvedValue([{ id: '1', ...updates }]);
 
       const result = await repository.update('1', updates);
 
       expect(mockDb.update).toHaveBeenCalled();
+      expect(result?.name).toBe('Updated Name');
+    });
+
+    it('should return null when record not found', async () => {
+      mockDb.update.mockResolvedValue([]);
+
+      const result = await repository.update('nonexistent', { name: 'Test' });
+
+      expect(result).toBeNull();
     });
   });
 
   describe('delete', () => {
     it('should delete record', async () => {
-      mockDb.delete.mockResolvedValue({ success: true });
+      mockDb.delete.mockResolvedValue(1);
 
       const result = await repository.delete('1');
 
+      expect(result).toBe(true);
       expect(mockDb.delete).toHaveBeenCalled();
+    });
+
+    it('should return false when record not found', async () => {
+      mockDb.delete.mockResolvedValue(0);
+
+      const result = await repository.delete('nonexistent');
+
+      expect(result).toBe(false);
     });
   });
 
@@ -109,7 +136,7 @@ describe('BaseRepository', () => {
     });
   });
 
-  describe('paginate', () => {
+  describe('findPaginated', () => {
     it('should paginate records', async () => {
       const mockRecords = [
         { id: '1', name: 'Record 1' },
@@ -119,37 +146,36 @@ describe('BaseRepository', () => {
       mockDb.query.mockResolvedValue(mockRecords);
       mockDb.queryCount.mockResolvedValue(100);
 
-      const result = await repository.paginate(0, 10);
+      const result = await repository.findPaginated(1, 10);
 
       expect(result).toBeDefined();
+      expect(result.data).toHaveLength(2);
+      expect(result.pagination.total).toBe(100);
+      expect(result.pagination.page).toBe(1);
       expect(mockDb.query).toHaveBeenCalled();
     });
   });
 
-  describe('search', () => {
-    it('should search records with criteria', async () => {
-      const mockRecords = [{ id: '1', name: 'Test' }];
-
-      mockDb.query.mockResolvedValue(mockRecords);
-
-      const result = await repository.search({ name: 'Test' });
-
-      expect(mockDb.query).toHaveBeenCalled();
-    });
-  });
-
-  describe('bulkCreate', () => {
+  describe('createMany', () => {
     it('should create multiple records', async () => {
       const records = [
         { id: '1', name: 'Record 1' },
         { id: '2', name: 'Record 2' },
       ];
 
-      mockDb.insert.mockResolvedValue({ rowCount: 2 });
+      mockDb.bulkInsert.mockResolvedValue(records);
 
-      const result = await repository.bulkCreate(records);
+      const result = await repository.createMany(records);
 
-      expect(mockDb.insert).toHaveBeenCalled();
+      expect(result).toHaveLength(2);
+      expect(mockDb.bulkInsert).toHaveBeenCalled();
+    });
+
+    it('should return empty array for empty input', async () => {
+      const result = await repository.createMany([]);
+
+      expect(result).toHaveLength(0);
+      expect(mockDb.bulkInsert).not.toHaveBeenCalled();
     });
   });
 
@@ -165,11 +191,11 @@ describe('BaseRepository', () => {
     });
 
     it('should rollback transaction on error', async () => {
-      const transactionCallback = jest.fn().mockRejectedValue(new Error('Test error'));
-
       mockDb.transaction.mockRejectedValue(new Error('Transaction failed'));
 
-      await expect(repository.transaction(transactionCallback)).rejects.toThrow();
+      await expect(
+        repository.transaction(async () => { throw new Error('Test error'); })
+      ).rejects.toThrow();
     });
   });
 
@@ -203,11 +229,11 @@ describe('BaseRepository', () => {
     it('should build WHERE clause with parameters', async () => {
       mockDb.query.mockResolvedValue([]);
 
-      await repository.search({ id: '1' });
+      await repository.findAll({ where: { id: '1' } });
 
       const callArgs = mockDb.query.mock.calls[0];
       expect(callArgs[0]).toContain('WHERE');
-      expect(callArgs).toHaveLength(2);
+      expect(callArgs[1]).toEqual(['1']);
     });
   });
 
@@ -221,13 +247,54 @@ describe('BaseRepository', () => {
     it('should handle SQL errors', async () => {
       mockDb.insert.mockRejectedValue(new Error('Syntax error in SQL'));
 
-      await expect(repository.create({ id: '1' })).rejects.toThrow();
+      await expect(repository.create({ id: '1', name: 'test' })).rejects.toThrow();
     });
 
     it('should handle constraint violations', async () => {
       mockDb.insert.mockRejectedValue(new Error('Unique constraint violated'));
 
-      await expect(repository.create({ id: '1' })).rejects.toThrow();
+      await expect(repository.create({ id: '1', name: 'test' })).rejects.toThrow();
+    });
+  });
+
+  describe('exists', () => {
+    it('should return true when record exists', async () => {
+      mockDb.queryOne.mockResolvedValue({ '?column?': 1 });
+
+      const result = await repository.exists({ id: '1' });
+
+      expect(result).toBe(true);
+    });
+
+    it('should return false when record does not exist', async () => {
+      mockDb.queryOne.mockResolvedValue(null);
+
+      const result = await repository.exists({ id: 'nonexistent' });
+
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('findByIds', () => {
+    it('should find multiple records by IDs', async () => {
+      const mockRecords = [
+        { id: '1', name: 'Record 1' },
+        { id: '2', name: 'Record 2' },
+      ];
+
+      mockDb.query.mockResolvedValue(mockRecords);
+
+      const result = await repository.findByIds(['1', '2']);
+
+      expect(result).toHaveLength(2);
+      expect(mockDb.query).toHaveBeenCalled();
+    });
+
+    it('should return empty array for empty IDs', async () => {
+      const result = await repository.findByIds([]);
+
+      expect(result).toHaveLength(0);
+      expect(mockDb.query).not.toHaveBeenCalled();
     });
   });
 });

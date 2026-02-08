@@ -3,7 +3,7 @@
  */
 
 import { ARPParser } from '../../../../src/processors/parsers/arp-parser';
-import { TelemetryData, ARPEntry, MACTableEntry } from '../../../../src/utils/types';
+import { TelemetryData, ARPEntry, MACTableEntry, TelemetrySource } from '../../../../src/utils/types';
 
 describe('ARPParser', () => {
   let parser: ARPParser;
@@ -16,14 +16,15 @@ describe('ARPParser', () => {
     it('should parse ARP telemetry data', () => {
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'arp-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.ARP,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: {
           type: 'arp',
           entries: [
-            { ipAddress: '192.168.1.100', macAddress: '00:1A:2B:3C:4D:5E', vlanId: 1, interface: 'eth0' },
-            { ipAddress: '192.168.1.101', macAddress: 'AA:BB:CC:DD:EE:FF', vlanId: 1, interface: 'eth0' },
+            { ipAddress: '192.168.1.100', macAddress: '00:1A:2B:3C:4D:5E', vlanId: 1, interface: 'eth0', type: 'dynamic' },
+            { ipAddress: '192.168.1.101', macAddress: 'AA:BB:CC:DD:EE:FF', vlanId: 1, interface: 'eth0', type: 'dynamic' },
           ],
         },
       };
@@ -37,9 +38,10 @@ describe('ARPParser', () => {
     it('should parse MAC table telemetry data', () => {
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'mac-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.MAC_TABLE,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: {
           type: 'mac',
           entries: [
@@ -58,13 +60,14 @@ describe('ARPParser', () => {
     it('should handle mixed ARP and MAC data', () => {
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'arp-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.ARP,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: {
           type: 'arp',
           entries: [
-            { ipAddress: '192.168.1.100', macAddress: '00:1A:2B:3C:4D:5E', vlanId: 1 },
+            { ipAddress: '192.168.1.100', macAddress: '00:1A:2B:3C:4D:5E', vlanId: 1, type: 'dynamic' },
           ],
         },
       };
@@ -78,15 +81,16 @@ describe('ARPParser', () => {
     it('should filter out invalid ARP entries (missing IP or MAC)', () => {
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'arp-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.ARP,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: {
           type: 'arp',
           entries: [
-            { ipAddress: '192.168.1.100', macAddress: '00:1A:2B:3C:4D:5E' },
-            { ipAddress: '', macAddress: 'AA:BB:CC:DD:EE:FF' },
-            { ipAddress: '192.168.1.101', macAddress: '' },
+            { ipAddress: '192.168.1.100', macAddress: '00:1A:2B:3C:4D:5E', type: 'dynamic' },
+            { ipAddress: '', macAddress: 'AA:BB:CC:DD:EE:FF', type: 'dynamic' },
+            { ipAddress: '192.168.1.101', macAddress: '', type: 'dynamic' },
           ],
         },
       };
@@ -100,9 +104,10 @@ describe('ARPParser', () => {
     it('should filter out invalid MAC entries (missing MAC)', () => {
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'mac-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.MAC_TABLE,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: {
           type: 'mac',
           entries: [
@@ -122,8 +127,8 @@ describe('ARPParser', () => {
   describe('buildL2Topology', () => {
     it('should build L2 topology from ARP entries', () => {
       const arpEntries: ARPEntry[] = [
-        { ipAddress: '192.168.1.100', macAddress: '00:1A:2B:3C:4D:5E', vlanId: 1, interface: 'eth0' },
-        { ipAddress: '192.168.1.101', macAddress: 'AA:BB:CC:DD:EE:FF', vlanId: 1, interface: 'eth0' },
+        { ipAddress: '192.168.1.100', macAddress: '00:1A:2B:3C:4D:5E', vlanId: 1, interface: 'eth0', type: 'dynamic' },
+        { ipAddress: '192.168.1.101', macAddress: 'AA:BB:CC:DD:EE:FF', vlanId: 1, interface: 'eth0', type: 'dynamic' },
       ];
 
       const result = parser.buildL2Topology(arpEntries, []);
@@ -149,8 +154,8 @@ describe('ARPParser', () => {
     it('should aggregate MAC and IP information for same device', () => {
       const mac = '00:1A:2B:3C:4D:5E';
       const arpEntries: ARPEntry[] = [
-        { ipAddress: '192.168.1.100', macAddress: mac, vlanId: 1, interface: 'eth0' },
-        { ipAddress: '192.168.1.200', macAddress: mac, vlanId: 2, interface: 'eth1' },
+        { ipAddress: '192.168.1.100', macAddress: mac, vlanId: 1, interface: 'eth0', type: 'dynamic' },
+        { ipAddress: '192.168.1.200', macAddress: mac, vlanId: 2, interface: 'eth1', type: 'dynamic' },
       ];
       const macEntries: MACTableEntry[] = [
         { macAddress: mac, vlanId: 1, port: 'Gi0/0/1' },
@@ -170,8 +175,8 @@ describe('ARPParser', () => {
 
     it('should handle duplicate entries without duplicating device records', () => {
       const arpEntries: ARPEntry[] = [
-        { ipAddress: '192.168.1.100', macAddress: '00:1A:2B:3C:4D:5E', vlanId: 1, interface: 'eth0' },
-        { ipAddress: '192.168.1.100', macAddress: '00:1A:2B:3C:4D:5E', vlanId: 1, interface: 'eth0' },
+        { ipAddress: '192.168.1.100', macAddress: '00:1A:2B:3C:4D:5E', vlanId: 1, interface: 'eth0', type: 'dynamic' },
+        { ipAddress: '192.168.1.100', macAddress: '00:1A:2B:3C:4D:5E', vlanId: 1, interface: 'eth0', type: 'dynamic' },
       ];
 
       const result = parser.buildL2Topology(arpEntries, []);
@@ -182,7 +187,7 @@ describe('ARPParser', () => {
 
     it('should set vendor information from MAC address', () => {
       const arpEntries: ARPEntry[] = [
-        { ipAddress: '192.168.1.100', macAddress: '00:1A:2B:3C:4D:5E', vlanId: 1, interface: 'eth0' },
+        { ipAddress: '192.168.1.100', macAddress: '00:1A:2B:3C:4D:5E', vlanId: 1, interface: 'eth0', type: 'dynamic' },
       ];
 
       const result = parser.buildL2Topology(arpEntries, []);
@@ -266,8 +271,8 @@ describe('ARPParser', () => {
   describe('ARP deduplication', () => {
     it('should handle multiple ARP entries for same IP on different VLANs', () => {
       const arpEntries: ARPEntry[] = [
-        { ipAddress: '192.168.1.100', macAddress: '00:1A:2B:3C:4D:5E', vlanId: 1, interface: 'eth0' },
-        { ipAddress: '192.168.1.100', macAddress: 'AA:BB:CC:DD:EE:FF', vlanId: 2, interface: 'eth1' },
+        { ipAddress: '192.168.1.100', macAddress: '00:1A:2B:3C:4D:5E', vlanId: 1, interface: 'eth0', type: 'dynamic' },
+        { ipAddress: '192.168.1.100', macAddress: 'AA:BB:CC:DD:EE:FF', vlanId: 2, interface: 'eth1', type: 'dynamic' },
       ];
 
       const result = parser.buildL2Topology(arpEntries, []);
@@ -277,7 +282,7 @@ describe('ARPParser', () => {
 
     it('should update lastSeen time for duplicate MAC entries', () => {
       const arpEntries: ARPEntry[] = [
-        { ipAddress: '192.168.1.100', macAddress: '00:1A:2B:3C:4D:5E', vlanId: 1, interface: 'eth0' },
+        { ipAddress: '192.168.1.100', macAddress: '00:1A:2B:3C:4D:5E', vlanId: 1, interface: 'eth0', type: 'dynamic' },
       ];
 
       const result = parser.buildL2Topology(arpEntries, []);
@@ -293,10 +298,11 @@ describe('ARPParser', () => {
     it('should handle null data gracefully', () => {
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'arp-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.ARP,
         timestamp: new Date(),
-        data: null,
+        processed: false,
+        metadata: {},
+        data: {},
       };
 
       expect(() => parser.parse(telemetry as any)).toThrow();
@@ -305,9 +311,10 @@ describe('ARPParser', () => {
     it('should handle empty entries array', () => {
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'arp-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.ARP,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: {
           type: 'arp',
           entries: [],
@@ -321,7 +328,7 @@ describe('ARPParser', () => {
 
     it('should handle invalid MAC address format', () => {
       const arpEntries: ARPEntry[] = [
-        { ipAddress: '192.168.1.100', macAddress: 'invalid-mac', vlanId: 1, interface: 'eth0' },
+        { ipAddress: '192.168.1.100', macAddress: 'invalid-mac', vlanId: 1, interface: 'eth0', type: 'dynamic' },
       ];
 
       expect(() => parser.buildL2Topology(arpEntries, [])).not.toThrow();
@@ -331,9 +338,9 @@ describe('ARPParser', () => {
   describe('VLAN handling', () => {
     it('should correctly handle multiple VLANs', () => {
       const arpEntries: ARPEntry[] = [
-        { ipAddress: '10.0.1.100', macAddress: '00:1A:2B:3C:4D:5E', vlanId: 10, interface: 'eth0' },
-        { ipAddress: '10.0.2.100', macAddress: '00:1A:2B:3C:4D:5E', vlanId: 20, interface: 'eth1' },
-        { ipAddress: '10.0.3.100', macAddress: '00:1A:2B:3C:4D:5E', vlanId: 30, interface: 'eth2' },
+        { ipAddress: '10.0.1.100', macAddress: '00:1A:2B:3C:4D:5E', vlanId: 10, interface: 'eth0', type: 'dynamic' },
+        { ipAddress: '10.0.2.100', macAddress: '00:1A:2B:3C:4D:5E', vlanId: 20, interface: 'eth1', type: 'dynamic' },
+        { ipAddress: '10.0.3.100', macAddress: '00:1A:2B:3C:4D:5E', vlanId: 30, interface: 'eth2', type: 'dynamic' },
       ];
 
       const result = parser.buildL2Topology(arpEntries, []);
@@ -345,7 +352,7 @@ describe('ARPParser', () => {
 
     it('should handle devices without VLAN information', () => {
       const arpEntries: ARPEntry[] = [
-        { ipAddress: '192.168.1.100', macAddress: '00:1A:2B:3C:4D:5E', interface: 'eth0' },
+        { ipAddress: '192.168.1.100', macAddress: '00:1A:2B:3C:4D:5E', interface: 'eth0', type: 'dynamic' },
       ];
 
       const result = parser.buildL2Topology(arpEntries, []);

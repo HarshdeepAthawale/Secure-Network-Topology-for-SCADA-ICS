@@ -85,6 +85,7 @@ module "rds" {
   security_group_id = module.vpc.rds_security_group_id
   db_name           = var.db_name
   db_username       = var.db_username
+  instance_class    = var.db_instance_class
 }
 
 # S3 Buckets
@@ -99,8 +100,10 @@ module "s3" {
 module "cloudwatch" {
   source = "./modules/cloudwatch"
 
-  name_prefix         = local.name_prefix
-  environment         = var.environment
+  name_prefix           = local.name_prefix
+  environment           = var.environment
   lambda_function_names = module.lambda.function_names
-  alert_email         = var.alert_email
+  alert_email           = var.alert_email
+  rds_instance_id       = module.rds.instance_id
+  api_gateway_name      = module.lambda.api_name
 }

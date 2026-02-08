@@ -6,7 +6,7 @@ import { Pool } from 'pg';
 import { DeviceRepository } from '../../../src/database/repositories/device.repository';
 import { ConnectionRepository } from '../../../src/database/repositories/connection.repository';
 import { AlertRepository } from '../../../src/database/repositories/alert.repository';
-import { DeviceType, DeviceStatus, PurdueLevel, SecurityZone, AlertType, AlertSeverity } from '../../../src/utils/types';
+import { DeviceType, DeviceStatus, PurdueLevel, SecurityZone, AlertType, AlertSeverity, ConnectionType } from '../../../src/utils/types';
 
 // Skip if no database connection available
 const describeIfDb = process.env.DATABASE_HOST ? describe : describe.skip;
@@ -27,7 +27,7 @@ describeIfDb('Database Repositories Integration', () => {
             password: process.env.DATABASE_PASSWORD || 'test_password',
         });
 
-        // Initialize repositories
+        // Initialize repositories (they get connection via getConnection())
         deviceRepo = new DeviceRepository();
         connectionRepo = new ConnectionRepository();
         alertRepo = new AlertRepository();
@@ -147,7 +147,7 @@ describeIfDb('Database Repositories Integration', () => {
                 id: 'test-conn-001',
                 sourceDeviceId,
                 targetDeviceId,
-                connectionType: 'ethernet',
+                connectionType: ConnectionType.ETHERNET,
                 protocol: 'modbus',
                 port: 502,
                 isSecure: false,
@@ -196,7 +196,7 @@ describeIfDb('Database Repositories Integration', () => {
             // Create test device for alerts
             const device = await deviceRepo.create({
                 name: 'Test Alert Device',
-                type: DeviceType.SERVER,
+                type: DeviceType.DATABASE_SERVER,
                 purdueLevel: PurdueLevel.LEVEL_3,
                 securityZone: SecurityZone.OPERATIONS,
                 status: DeviceStatus.ONLINE,

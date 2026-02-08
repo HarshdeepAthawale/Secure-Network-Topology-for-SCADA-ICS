@@ -5,6 +5,7 @@
 import { BaseRepository, PaginatedResult } from './base.repository';
 import { Alert, AlertSeverity, AlertType } from '../../utils/types';
 import { logger } from '../../utils/logger';
+import { v4 as uuidv4 } from 'uuid';
 
 // ============================================================================
 // Types
@@ -95,7 +96,7 @@ export class AlertRepository extends BaseRepository<Alert, CreateAlertDTO, Updat
      */
     protected processCreateData(data: CreateAlertDTO): Record<string, unknown> {
         return {
-            id: data.id,
+            id: data.id || uuidv4(),
             type: data.type,
             severity: data.severity,
             title: data.title,
@@ -133,6 +134,15 @@ export class AlertRepository extends BaseRepository<Alert, CreateAlertDTO, Updat
             [id]
         );
         return row ? this.toEntity(row) : null;
+    }
+
+    /**
+     * Override create to convert database row to entity
+     */
+    async create(data: CreateAlertDTO): Promise<Alert> {
+        const processedData = this.processCreateData(data);
+        const row = await this.db.insert<DBAlert>(this.tableName, processedData);
+        return this.toEntity(row);
     }
 
     /**

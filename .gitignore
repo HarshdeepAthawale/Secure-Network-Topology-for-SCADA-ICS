@@ -10,6 +10,7 @@ dist/
 # Environment files
 .env
 .env.local
+.env.production
 .env.*.local
 
 # IDE
@@ -48,6 +49,7 @@ infrastructure/*.tfstate
 infrastructure/*.tfstate.backup
 infrastructure/*.tfvars
 infrastructure/.terraform.lock.hcl
+infrastructure/tfplan*
 
 # Terraform Bootstrap (contains AWS account info)
 infrastructure/bootstrap/.terraform/

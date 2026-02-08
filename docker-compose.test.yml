@@ -8,7 +8,12 @@ services:
       POSTGRES_DB: scada_topology_test
       POSTGRES_USER: test_user
       POSTGRES_PASSWORD: test_password
-      POSTGRES_INITDB_ARGS: "-c shared_buffers=256MB -c max_connections=200"
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_buffers=256MB"
+      - "-c"
+      - "max_connections=200"
     ports:
       - "5433:5432"
     volumes:
@@ -28,7 +33,6 @@ services:
     environment:
       SERVICES: s3,lambda,sqs,iot,kinesis
       DEBUG: 0
-      DATA_DIR: /tmp/localstack/data
       AWS_DEFAULT_REGION: us-east-1
       AWS_ACCESS_KEY_ID: testing
       AWS_SECRET_ACCESS_KEY: testing
@@ -37,7 +41,6 @@ services:
       - "4566:4566"
       - "4571:4571"
     volumes:
-      - "${TMPDIR:-/tmp}/localstack:/tmp/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
     healthcheck:
       test: ["CMD", "awslocal", "s3", "ls"]

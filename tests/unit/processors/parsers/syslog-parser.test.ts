@@ -3,7 +3,7 @@
  */
 
 import { SyslogParser } from '../../../../src/processors/parsers/syslog-parser';
-import { TelemetryData, SyslogMessage, AlertSeverity } from '../../../../src/utils/types';
+import { TelemetryData, SyslogMessage, AlertSeverity, TelemetrySource } from '../../../../src/utils/types';
 
 describe('SyslogParser', () => {
   let parser: SyslogParser;
@@ -16,9 +16,10 @@ describe('SyslogParser', () => {
     it('should parse syslog telemetry data', () => {
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'syslog-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.SYSLOG,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: {
           messages: [
             {
@@ -41,9 +42,10 @@ describe('SyslogParser', () => {
     it('should return empty array for non-syslog data', () => {
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'netflow-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.NETFLOW,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: { type: 'netflow' },
       };
 
@@ -72,9 +74,10 @@ describe('SyslogParser', () => {
 
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'syslog-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.SYSLOG,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: { messages },
       };
 
@@ -89,6 +92,8 @@ describe('SyslogParser', () => {
       const messages: SyslogMessage[] = [
         {
           timestamp: new Date(),
+        processed: false,
+        metadata: {},
           hostname: 'device-01',
           facility: 16,
           severity: 5,
@@ -98,9 +103,10 @@ describe('SyslogParser', () => {
 
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'syslog-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.SYSLOG,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: { messages },
       };
 
@@ -113,6 +119,8 @@ describe('SyslogParser', () => {
       const messages: SyslogMessage[] = [
         {
           timestamp: new Date(),
+        processed: false,
+        metadata: {},
           hostname: 'device-01',
           facility: 16,
           severity: 5,
@@ -122,9 +130,10 @@ describe('SyslogParser', () => {
 
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'syslog-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.SYSLOG,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: { messages },
       };
 
@@ -137,6 +146,8 @@ describe('SyslogParser', () => {
       const messages: SyslogMessage[] = [
         {
           timestamp: new Date(),
+        processed: false,
+        metadata: {},
           hostname: 'firewall-01',
           facility: 16,
           severity: 4,
@@ -146,9 +157,10 @@ describe('SyslogParser', () => {
 
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'syslog-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.SYSLOG,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: { messages },
       };
 
@@ -161,6 +173,8 @@ describe('SyslogParser', () => {
       const messages: SyslogMessage[] = [
         {
           timestamp: new Date(),
+        processed: false,
+        metadata: {},
           hostname: 'device-01',
           facility: 16,
           severity: 2,
@@ -170,9 +184,10 @@ describe('SyslogParser', () => {
 
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'syslog-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.SYSLOG,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: { messages },
       };
 
@@ -185,6 +200,8 @@ describe('SyslogParser', () => {
       const messages: SyslogMessage[] = [
         {
           timestamp: new Date(),
+        processed: false,
+        metadata: {},
           hostname: 'device-01',
           facility: 16,
           severity: 5,
@@ -194,9 +211,10 @@ describe('SyslogParser', () => {
 
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'syslog-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.SYSLOG,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: { messages },
       };
 
@@ -211,6 +229,8 @@ describe('SyslogParser', () => {
       const messages: SyslogMessage[] = [
         {
           timestamp: new Date(),
+        processed: false,
+        metadata: {},
           hostname: 'device-01',
           facility: 16,
           severity: 5,
@@ -220,9 +240,10 @@ describe('SyslogParser', () => {
 
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'syslog-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.SYSLOG,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: { messages },
       };
 
@@ -235,6 +256,8 @@ describe('SyslogParser', () => {
       const messages: SyslogMessage[] = [
         {
           timestamp: new Date(),
+        processed: false,
+        metadata: {},
           hostname: 'device-01',
           facility: 16,
           severity: 5,
@@ -244,9 +267,10 @@ describe('SyslogParser', () => {
 
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'syslog-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.SYSLOG,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: { messages },
       };
 
@@ -259,6 +283,8 @@ describe('SyslogParser', () => {
       const messages: SyslogMessage[] = [
         {
           timestamp: new Date(),
+        processed: false,
+        metadata: {},
           hostname: 'device-01',
           facility: 16,
           severity: 5,
@@ -268,9 +294,10 @@ describe('SyslogParser', () => {
 
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'syslog-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.SYSLOG,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: { messages },
       };
 
@@ -283,6 +310,8 @@ describe('SyslogParser', () => {
       const messages: SyslogMessage[] = [
         {
           timestamp: new Date(),
+        processed: false,
+        metadata: {},
           hostname: 'firewall-01',
           facility: 16,
           severity: 4,
@@ -292,9 +321,10 @@ describe('SyslogParser', () => {
 
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'syslog-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.SYSLOG,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: { messages },
       };
 
@@ -309,6 +339,8 @@ describe('SyslogParser', () => {
       const messages: SyslogMessage[] = [
         {
           timestamp: new Date(),
+        processed: false,
+        metadata: {},
           hostname: 'device-01',
           facility: 16,
           severity: 2,
@@ -318,9 +350,10 @@ describe('SyslogParser', () => {
 
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'syslog-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.SYSLOG,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: { messages },
       };
 
@@ -333,6 +366,8 @@ describe('SyslogParser', () => {
       const messages: SyslogMessage[] = [
         {
           timestamp: new Date(),
+        processed: false,
+        metadata: {},
           hostname: 'device-01',
           facility: 16,
           severity: 3,
@@ -342,9 +377,10 @@ describe('SyslogParser', () => {
 
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'syslog-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.SYSLOG,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: { messages },
       };
 
@@ -357,6 +393,8 @@ describe('SyslogParser', () => {
       const messages: SyslogMessage[] = [
         {
           timestamp: new Date(),
+        processed: false,
+        metadata: {},
           hostname: 'firewall-01',
           facility: 16,
           severity: 4,
@@ -366,9 +404,10 @@ describe('SyslogParser', () => {
 
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'syslog-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.SYSLOG,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: { messages },
       };
 
@@ -381,6 +420,8 @@ describe('SyslogParser', () => {
       const messages: SyslogMessage[] = [
         {
           timestamp: new Date(),
+        processed: false,
+        metadata: {},
           hostname: 'device-01',
           facility: 16,
           severity: 5,
@@ -390,9 +431,10 @@ describe('SyslogParser', () => {
 
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'syslog-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.SYSLOG,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: { messages },
       };
 
@@ -406,6 +448,8 @@ describe('SyslogParser', () => {
     it('should calculate higher risk for critical severity events', () => {
       const criticalMessage: SyslogMessage = {
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         hostname: 'device-01',
         facility: 16,
         severity: 2, // Critical
@@ -414,6 +458,8 @@ describe('SyslogParser', () => {
 
       const warningMessage: SyslogMessage = {
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         hostname: 'device-01',
         facility: 16,
         severity: 5, // Notice
@@ -422,17 +468,19 @@ describe('SyslogParser', () => {
 
       const telemetry1: TelemetryData = {
         id: 'telemetry-1',
-        source: 'syslog-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.SYSLOG,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: { messages: [criticalMessage] },
       };
 
       const telemetry2: TelemetryData = {
         id: 'telemetry-2',
-        source: 'syslog-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.SYSLOG,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: { messages: [warningMessage] },
       };
 
@@ -445,6 +493,8 @@ describe('SyslogParser', () => {
     it('should give higher risk score to security-relevant events', () => {
       const securityEvent: SyslogMessage = {
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         hostname: 'device-01',
         facility: 16,
         severity: 5,
@@ -453,6 +503,8 @@ describe('SyslogParser', () => {
 
       const nonSecurityEvent: SyslogMessage = {
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         hostname: 'device-01',
         facility: 16,
         severity: 5,
@@ -461,17 +513,19 @@ describe('SyslogParser', () => {
 
       const telemetry1: TelemetryData = {
         id: 'telemetry-1',
-        source: 'syslog-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.SYSLOG,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: { messages: [securityEvent] },
       };
 
       const telemetry2: TelemetryData = {
         id: 'telemetry-2',
-        source: 'syslog-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.SYSLOG,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: { messages: [nonSecurityEvent] },
       };
 
@@ -496,9 +550,10 @@ describe('SyslogParser', () => {
 
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'syslog-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.SYSLOG,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: { messages },
       };
 
@@ -519,9 +574,10 @@ describe('SyslogParser', () => {
 
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'syslog-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.SYSLOG,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: { messages },
       };
 
@@ -533,9 +589,10 @@ describe('SyslogParser', () => {
     it('should handle missing messages array', () => {
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'syslog-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.SYSLOG,
         timestamp: new Date(),
+        processed: false,
+        metadata: {},
         data: {},
       };
 
@@ -547,10 +604,11 @@ describe('SyslogParser', () => {
     it('should handle null message data', () => {
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'syslog-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.SYSLOG,
         timestamp: new Date(),
-        data: null,
+        processed: false,
+        metadata: {},
+        data: {},
       };
 
       expect(() => parser.parse(telemetry as any)).toThrow();

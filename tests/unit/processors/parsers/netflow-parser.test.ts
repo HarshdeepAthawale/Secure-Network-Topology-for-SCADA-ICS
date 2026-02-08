@@ -3,7 +3,7 @@
  */
 
 import { NetFlowParser } from '../../../../src/processors/parsers/netflow-parser';
-import { TelemetryData, NetFlowRecord } from '../../../../src/utils/types';
+import { TelemetryData, NetFlowRecord, TelemetrySource } from '../../../../src/utils/types';
 
 describe('NetFlowParser', () => {
   let parser: NetFlowParser;
@@ -16,8 +16,7 @@ describe('NetFlowParser', () => {
     it('should parse NetFlow telemetry data', () => {
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'netflow-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.NETFLOW,
         timestamp: new Date(),
         data: {
           type: 'netflow',
@@ -35,6 +34,8 @@ describe('NetFlowParser', () => {
             },
           ],
         },
+        processed: false,
+        metadata: {},
       };
 
       const result = parser.parse(telemetry);
@@ -47,10 +48,11 @@ describe('NetFlowParser', () => {
     it('should return empty array for non-NetFlow data', () => {
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'arp-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.ARP,
         timestamp: new Date(),
         data: { type: 'arp', entries: [] },
+        processed: false,
+        metadata: {},
       };
 
       const result = parser.parse(telemetry);
@@ -61,10 +63,11 @@ describe('NetFlowParser', () => {
     it('should return empty array when flows array is missing', () => {
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'netflow-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.NETFLOW,
         timestamp: new Date(),
         data: { type: 'netflow' },
+        processed: false,
+        metadata: {},
       };
 
       const result = parser.parse(telemetry);
@@ -100,10 +103,11 @@ describe('NetFlowParser', () => {
 
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'netflow-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.NETFLOW,
         timestamp: new Date(),
         data: { type: 'netflow', flows },
+        processed: false,
+        metadata: {},
       };
 
       const result = parser.parse(telemetry);
@@ -116,8 +120,7 @@ describe('NetFlowParser', () => {
     it('should calculate flow duration correctly', () => {
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'netflow-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.NETFLOW,
         timestamp: new Date(),
         data: {
           type: 'netflow',
@@ -135,6 +138,8 @@ describe('NetFlowParser', () => {
             },
           ],
         },
+        processed: false,
+        metadata: {},
       };
 
       const result = parser.parse(telemetry);
@@ -145,8 +150,7 @@ describe('NetFlowParser', () => {
     it('should calculate bytesPerSecond correctly', () => {
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'netflow-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.NETFLOW,
         timestamp: new Date(),
         data: {
           type: 'netflow',
@@ -164,6 +168,8 @@ describe('NetFlowParser', () => {
             },
           ],
         },
+        processed: false,
+        metadata: {},
       };
 
       const result = parser.parse(telemetry);
@@ -174,8 +180,7 @@ describe('NetFlowParser', () => {
     it('should handle zero duration flows', () => {
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'netflow-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.NETFLOW,
         timestamp: new Date(),
         data: {
           type: 'netflow',
@@ -193,6 +198,8 @@ describe('NetFlowParser', () => {
             },
           ],
         },
+        processed: false,
+        metadata: {},
       };
 
       const result = parser.parse(telemetry);
@@ -205,8 +212,7 @@ describe('NetFlowParser', () => {
     it('should detect Modbus TCP flows (port 502)', () => {
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'netflow-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.NETFLOW,
         timestamp: new Date(),
         data: {
           type: 'netflow',
@@ -224,6 +230,8 @@ describe('NetFlowParser', () => {
             },
           ],
         },
+        processed: false,
+        metadata: {},
       };
 
       const result = parser.parse(telemetry);
@@ -235,8 +243,7 @@ describe('NetFlowParser', () => {
     it('should detect OPC-UA flows (port 4840)', () => {
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'netflow-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.NETFLOW,
         timestamp: new Date(),
         data: {
           type: 'netflow',
@@ -254,19 +261,20 @@ describe('NetFlowParser', () => {
             },
           ],
         },
+        processed: false,
+        metadata: {},
       };
 
       const result = parser.parse(telemetry);
 
       expect(result[0].isIndustrial).toBe(true);
-      expect(result[0].industrialProtocol).toContain('OPC-UA');
+      expect(result[0].industrialProtocol).toContain('OPC UA');
     });
 
     it('should mark non-industrial protocols', () => {
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'netflow-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.NETFLOW,
         timestamp: new Date(),
         data: {
           type: 'netflow',
@@ -284,6 +292,8 @@ describe('NetFlowParser', () => {
             },
           ],
         },
+        processed: false,
+        metadata: {},
       };
 
       const result = parser.parse(telemetry);
@@ -297,8 +307,7 @@ describe('NetFlowParser', () => {
     it('should identify TCP protocol (6)', () => {
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'netflow-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.NETFLOW,
         timestamp: new Date(),
         data: {
           type: 'netflow',
@@ -316,6 +325,8 @@ describe('NetFlowParser', () => {
             },
           ],
         },
+        processed: false,
+        metadata: {},
       };
 
       const result = parser.parse(telemetry);
@@ -327,8 +338,7 @@ describe('NetFlowParser', () => {
     it('should identify UDP protocol (17)', () => {
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'netflow-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.NETFLOW,
         timestamp: new Date(),
         data: {
           type: 'netflow',
@@ -346,6 +356,8 @@ describe('NetFlowParser', () => {
             },
           ],
         },
+        processed: false,
+        metadata: {},
       };
 
       const result = parser.parse(telemetry);
@@ -409,10 +421,11 @@ describe('NetFlowParser', () => {
     it('should handle invalid flow data', () => {
       const telemetry: TelemetryData = {
         id: 'telemetry-1',
-        source: 'netflow-collector',
-        sourceId: 'collector-1',
+        source: TelemetrySource.NETFLOW,
         timestamp: new Date(),
         data: { type: 'netflow' },
+        processed: false,
+        metadata: {},
       };
 
       expect(() => parser.parse(telemetry)).not.toThrow();
