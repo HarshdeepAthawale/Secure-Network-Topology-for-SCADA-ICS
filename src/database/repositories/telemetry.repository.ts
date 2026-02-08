@@ -76,7 +76,7 @@ export class TelemetryRepository extends BaseRepository<TelemetryData, CreateTel
             device_id: data.deviceId,
             timestamp: data.timestamp,
             data: JSON.stringify(data.data || {}),
-            raw: data.raw,
+            raw_data: data.raw,
             processed: data.processed ?? false,
             metadata: JSON.stringify(data.metadata || {}),
         };
