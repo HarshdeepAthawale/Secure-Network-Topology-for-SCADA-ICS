@@ -70,8 +70,10 @@ class Logger {
       }),
     ];
 
-    // Add file transport in production
-    if (config.isProduction) {
+    // Add file transport in production (but not in Lambda)
+    // Lambda environment is read-only except /tmp, so skip file transports
+    const isLambda = !!process.env.LAMBDA_TASK_ROOT || !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+    if (config.isProduction && !isLambda) {
       transports.push(
         new winston.transports.File({
           filename: 'logs/error.log',

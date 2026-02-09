@@ -58,3 +58,9 @@ variable "log_retention_days" {
   type        = number
   default     = 90
 }
+
+variable "ec2_instance_type" {
+  description = "EC2 instance type for MQTT ingest service"
+  type        = string
+  default     = "t3.small"
+}

@@ -41,7 +41,7 @@ cd "$PACKAGE_DIR"
 zip -r "$PROJECT_ROOT/lambda-package.zip" .
 
 # Deploy to AWS
-FUNCTIONS=("ingest" "process" "query" "export")
+FUNCTIONS=("ingest" "process" "query" "export" "generator")
 if [ "$FUNCTION" != "all" ]; then
   FUNCTIONS=("$FUNCTION")
 fi
