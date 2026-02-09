@@ -39,15 +39,66 @@ resource "aws_iot_policy" "collector" {
       {
         Effect   = "Allow"
         Action   = ["iot:Subscribe"]
-        Resource = "arn:aws:iot:*:*:topicfilter/scada/commands/*"
+        Resource = [
+          "arn:aws:iot:*:*:topicfilter/scada/commands/*",
+          "arn:aws:iot:*:*:topicfilter/scada/telemetry"
+        ]
       },
       {
         Effect   = "Allow"
         Action   = ["iot:Receive"]
-        Resource = "arn:aws:iot:*:*:topic/scada/commands/*"
+        Resource = [
+          "arn:aws:iot:*:*:topic/scada/commands/*",
+          "arn:aws:iot:*:*:topic/scada/telemetry"
+        ]
       }
     ]
   })
+}
+
+# IoT Thing for EC2 Instance
+resource "aws_iot_thing" "ec2_ingest" {
+  name = "${var.name_prefix}-ec2-ingest"
+}
+
+resource "aws_iot_certificate" "ec2_ingest" {
+  active = true
+}
+
+resource "aws_iot_thing_principal_attachment" "ec2_ingest" {
+  thing     = aws_iot_thing.ec2_ingest.name
+  principal = aws_iot_certificate.ec2_ingest.arn
+}
+
+# IoT Policy for EC2 Instance (subscribe to telemetry)
+resource "aws_iot_policy" "ec2_ingest" {
+  name = "${var.name_prefix}-ec2-ingest-policy"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["iot:Connect"]
+        Resource = "arn:aws:iot:*:*:client/${var.name_prefix}-ec2-*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["iot:Subscribe"]
+        Resource = "arn:aws:iot:*:*:topicfilter/scada/telemetry"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["iot:Receive"]
+        Resource = "arn:aws:iot:*:*:topic/scada/telemetry"
+      }
+    ]
+  })
+}
+
+resource "aws_iot_policy_attachment" "ec2_ingest" {
+  policy = aws_iot_policy.ec2_ingest.name
+  target = aws_iot_certificate.ec2_ingest.arn
 }
 
 resource "aws_iot_policy_attachment" "collector" {
@@ -142,4 +193,22 @@ output "private_key" {
 
 output "telemetry_rule_arn" {
   value = aws_iot_topic_rule.telemetry.arn
+}
+
+output "ec2_thing_name" {
+  value = aws_iot_thing.ec2_ingest.name
+}
+
+output "ec2_certificate_arn" {
+  value = aws_iot_certificate.ec2_ingest.arn
+}
+
+output "ec2_certificate_pem" {
+  value     = aws_iot_certificate.ec2_ingest.certificate_pem
+  sensitive = true
+}
+
+output "ec2_private_key" {
+  value     = aws_iot_certificate.ec2_ingest.private_key
+  sensitive = true
 }

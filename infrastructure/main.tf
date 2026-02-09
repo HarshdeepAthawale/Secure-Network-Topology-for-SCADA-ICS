@@ -58,8 +58,9 @@ module "vpc" {
 module "iot" {
   source = "./modules/iot"
 
-  name_prefix = local.name_prefix
-  environment = var.environment
+  name_prefix        = local.name_prefix
+  environment        = var.environment
+  lambda_function_arn = "" # Will be updated after Lambda is created
 }
 
 # Lambda Functions
@@ -72,6 +73,7 @@ module "lambda" {
   subnet_ids      = module.vpc.private_subnet_ids
   security_groups = [module.vpc.lambda_security_group_id]
   iot_rule_arn    = module.iot.telemetry_rule_arn
+  iot_endpoint    = module.iot.iot_endpoint
 }
 
 # RDS PostgreSQL
@@ -94,6 +96,22 @@ module "s3" {
 
   name_prefix = local.name_prefix
   environment = var.environment
+}
+
+# EC2 Instance for MQTT to RDS Service
+module "ec2" {
+  source = "./modules/ec2"
+
+  name_prefix            = local.name_prefix
+  vpc_id                 = module.vpc.vpc_id
+  subnet_id              = module.vpc.private_subnet_ids[0]
+  rds_security_group_id  = module.vpc.rds_security_group_id
+  iot_endpoint           = module.iot.iot_endpoint
+  iot_certificate_arn    = module.iot.ec2_certificate_arn
+  iot_thing_name         = module.iot.ec2_thing_name
+  db_secret_arn          = module.rds.secret_arn
+  region                 = var.aws_region
+  instance_type          = var.ec2_instance_type
 }
 
 # CloudWatch
