@@ -57,7 +57,7 @@ resource "aws_iam_role_policy" "lambda_custom" {
 resource "aws_lambda_function" "ingest" {
   function_name = "${var.name_prefix}-ingest"
   role          = aws_iam_role.lambda.arn
-  handler       = "dist/lambda/ingest/handler.handler"
+  handler       = "lambda/ingest/handler.handler"
   runtime       = "nodejs18.x"
   timeout       = 30
   memory_size   = 256
@@ -84,7 +84,7 @@ resource "aws_lambda_function" "ingest" {
 resource "aws_lambda_function" "process" {
   function_name = "${var.name_prefix}-process"
   role          = aws_iam_role.lambda.arn
-  handler       = "dist/lambda/process/handler.handler"
+  handler       = "lambda/process/handler.handler"
   runtime       = "nodejs18.x"
   timeout       = 300
   memory_size   = 512
@@ -111,7 +111,7 @@ resource "aws_lambda_function" "process" {
 resource "aws_lambda_function" "query" {
   function_name = "${var.name_prefix}-query"
   role          = aws_iam_role.lambda.arn
-  handler       = "dist/lambda/query/handler.handler"
+  handler       = "lambda/query/handler.handler"
   runtime       = "nodejs18.x"
   timeout       = 30
   memory_size   = 256
@@ -138,7 +138,7 @@ resource "aws_lambda_function" "query" {
 resource "aws_lambda_function" "generator" {
   function_name = "${var.name_prefix}-generator"
   role          = aws_iam_role.lambda.arn
-  handler       = "dist/lambda/generator/handler.handler"
+  handler       = "lambda/generator/handler.handler"
   runtime       = "nodejs18.x"
   timeout       = 60
   memory_size   = 256

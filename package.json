@@ -74,6 +74,9 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },
+  "optionalDependencies": {
+    "modbus-serial": "^8.0.0"
+  },
   "engines": {
     "node": ">=18.0.0"
   }
