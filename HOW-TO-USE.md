@@ -779,6 +779,8 @@ docker-compose -f grafana/docker-compose.yml up -d
 **Access**: `http://localhost:3000`
 **Default login**: admin / admin
 
+**If dashboards show no data**: Run `./scripts/seed-database.sh` to load Purdue zones; optionally `./scripts/seed-database.sh --test-data` for full test data. Set dashboard time range to **Last 7 days** (or a range that includes your data).
+
 ### Available Dashboards
 
 | Dashboard | File | Shows |

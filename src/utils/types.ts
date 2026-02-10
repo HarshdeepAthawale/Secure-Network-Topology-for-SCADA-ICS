@@ -422,6 +422,8 @@ export interface DatabaseConfig {
   user: string;
   password: string;
   ssl: boolean;
+  /** When ssl is true, if false allows RDS/self-signed certs (e.g. in private VPC). Default true. */
+  sslRejectUnauthorized?: boolean;
   poolSize: number;
 }
 

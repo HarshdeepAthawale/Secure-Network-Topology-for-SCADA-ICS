@@ -64,3 +64,15 @@ variable "ec2_instance_type" {
   type        = string
   default     = "t3.small"
 }
+
+variable "ec2_s3_deploy_bucket" {
+  description = "S3 bucket for EC2 app tarball (optional; if set, user-data downloads and extracts)"
+  type        = string
+  default     = ""
+}
+
+variable "ec2_s3_deploy_key" {
+  description = "S3 key for EC2 app tarball (e.g. deployments/scada-app.tar.gz)"
+  type        = string
+  default     = ""
+}

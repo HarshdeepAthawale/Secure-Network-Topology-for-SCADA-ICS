@@ -400,9 +400,10 @@ Edit in Grafana UI or JSON:
 ### Issue: Dashboard shows "No data"
 **Solution**:
 1. Verify PostgreSQL is running: `psql -h localhost -c "SELECT 1;"`
-2. Load test data: `./scripts/phase2-test-data.sql`
-3. Check time range (make sure data falls within selected range)
-4. Verify datasource in dashboard settings
+2. Seed Purdue zones (required for Zone Overview): `./scripts/seed-database.sh`
+3. Load test data for all panels: `./scripts/seed-database.sh --test-data`
+4. Set dashboard time range to **Last 7 days** (or a range that includes your data)
+5. Verify datasource in Grafana: Configuration → Data sources → PostgreSQL (uid `postgres`) → Save & test
 
 ### Issue: Slow query performance
 **Solution**:

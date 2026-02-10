@@ -510,7 +510,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  d.name as device_name,\n  d.type as device_type,\n  sz.name as zone,\n  d.purdue_level as purdue_level,\n  r.overall_score as risk_score,\n  r.assessed_at as last_assessed\nFROM risk_assessments r\nJOIN devices d ON r.device_id = d.id\nLEFT JOIN security_zones sz ON d.security_zone = sz.zone_id\nWHERE ($__timeFilter(r.assessed_at))\nORDER BY r.overall_score DESC\nLIMIT 10",
+          "rawSql": "SELECT\n  d.name as device_name,\n  d.type as device_type,\n  sz.name as zone,\n  d.purdue_level as purdue_level,\n  r.overall_score as risk_score,\n  r.assessed_at as last_assessed\nFROM risk_assessments r\nJOIN devices d ON r.device_id = d.id\nLEFT JOIN security_zones sz ON d.security_zone = sz.zone_type\nWHERE ($__timeFilter(r.assessed_at))\nORDER BY r.overall_score DESC\nLIMIT 10",
           "refId": "A",
           "select": [
             [

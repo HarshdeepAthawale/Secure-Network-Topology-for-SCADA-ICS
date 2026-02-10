@@ -1,0 +1,17 @@
+# Copy to terraform.tfvars and set values as needed.
+# EC2 app deploy: when set, user-data downloads this tarball at first boot.
+# ec2_s3_deploy_bucket = "my-bucket"
+# ec2_s3_deploy_key   = "deploys/scada-app.tar.gz"
+
+aws_region   = "ap-south-1"
+environment  = "prod"  # or "dev"
+
+vpc_cidr = "10.0.0.0/16"
+
+db_name           = "scada_topology"
+db_username       = "scada_admin"
+db_instance_class = "db.t3.micro"
+
+alert_email = ""
+enable_deletion_protection = false
+log_retention_days         = 30

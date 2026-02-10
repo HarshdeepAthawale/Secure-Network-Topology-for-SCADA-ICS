@@ -107,7 +107,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  CASE\n    WHEN d.purdue_level = 0 THEN 'L0-ICS'\n    WHEN d.purdue_level = 1 THEN 'L1-Control'\n    WHEN d.purdue_level = 2 THEN 'L2-Supervisory'\n    WHEN d.purdue_level = 3 THEN 'L3-Operations'\n    WHEN d.purdue_level = 4 THEN 'L4-Enterprise'\n    WHEN d.purdue_level = 5 THEN 'L5-DMZ'\n    ELSE 'Unknown'\n  END as level,\n  COUNT(*) as count\nFROM devices d\nWHERE ($__timeFilter(d.last_seen_at))\nGROUP BY d.purdue_level\nORDER BY d.purdue_level",
+          "rawSql": "SELECT\n  CASE\n    WHEN d.purdue_level::text = '0' THEN 'L0-ICS'\n    WHEN d.purdue_level::text = '1' THEN 'L1-Control'\n    WHEN d.purdue_level::text = '2' THEN 'L2-Supervisory'\n    WHEN d.purdue_level::text = '3' THEN 'L3-Operations'\n    WHEN d.purdue_level::text = '4' THEN 'L4-Enterprise'\n    WHEN d.purdue_level::text = '5' THEN 'L5-DMZ'\n    ELSE 'Unknown'\n  END as level,\n  COUNT(*) as count\nFROM devices d\nWHERE ($__timeFilter(d.last_seen_at))\nGROUP BY d.purdue_level\nORDER BY d.purdue_level",
           "refId": "A",
           "select": [
             [
@@ -410,7 +410,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  CASE\n    WHEN d.purdue_level = 0 THEN 'L0-ICS'\n    WHEN d.purdue_level = 1 THEN 'L1-Control'\n    WHEN d.purdue_level = 2 THEN 'L2-Supervisory'\n    WHEN d.purdue_level = 3 THEN 'L3-Operations'\n    WHEN d.purdue_level = 4 THEN 'L4-Enterprise'\n    WHEN d.purdue_level = 5 THEN 'L5-DMZ'\n    ELSE 'Unknown'\n  END as level,\n  CASE WHEN d.status = 'online' THEN 'Online' ELSE 'Offline' END as status,\n  COUNT(*) as count\nFROM devices d\nWHERE ($__timeFilter(d.last_seen_at))\nGROUP BY d.purdue_level, d.status\nORDER BY d.purdue_level, d.status",
+          "rawSql": "SELECT\n  CASE\n    WHEN d.purdue_level::text = '0' THEN 'L0-ICS'\n    WHEN d.purdue_level::text = '1' THEN 'L1-Control'\n    WHEN d.purdue_level::text = '2' THEN 'L2-Supervisory'\n    WHEN d.purdue_level::text = '3' THEN 'L3-Operations'\n    WHEN d.purdue_level::text = '4' THEN 'L4-Enterprise'\n    WHEN d.purdue_level::text = '5' THEN 'L5-DMZ'\n    ELSE 'Unknown'\n  END as level,\n  CASE WHEN d.status = 'online' THEN 'Online' ELSE 'Offline' END as status,\n  COUNT(*) as count\nFROM devices d\nWHERE ($__timeFilter(d.last_seen_at))\nGROUP BY d.purdue_level, d.status\nORDER BY d.purdue_level, d.status",
           "refId": "A",
           "select": [
             [
@@ -514,7 +514,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  CASE\n    WHEN d.purdue_level = 0 THEN 'L0-ICS'\n    WHEN d.purdue_level = 1 THEN 'L1-Control'\n    WHEN d.purdue_level = 2 THEN 'L2-Supervisory'\n    WHEN d.purdue_level = 3 THEN 'L3-Operations'\n    WHEN d.purdue_level = 4 THEN 'L4-Enterprise'\n    WHEN d.purdue_level = 5 THEN 'L5-DMZ'\n    ELSE 'Unknown'\n  END as level,\n  COUNT(DISTINCT r.device_id) as devices_with_risk_assessment\nFROM devices d\nLEFT JOIN risk_assessments r ON d.id = r.device_id AND ($__timeFilter(r.assessed_at))\nWHERE ($__timeFilter(d.last_seen_at))\nGROUP BY d.purdue_level\nORDER BY d.purdue_level",
+          "rawSql": "SELECT\n  CASE\n    WHEN d.purdue_level::text = '0' THEN 'L0-ICS'\n    WHEN d.purdue_level::text = '1' THEN 'L1-Control'\n    WHEN d.purdue_level::text = '2' THEN 'L2-Supervisory'\n    WHEN d.purdue_level::text = '3' THEN 'L3-Operations'\n    WHEN d.purdue_level::text = '4' THEN 'L4-Enterprise'\n    WHEN d.purdue_level::text = '5' THEN 'L5-DMZ'\n    ELSE 'Unknown'\n  END as level,\n  COUNT(DISTINCT r.device_id) as devices_with_risk_assessment\nFROM devices d\nLEFT JOIN risk_assessments r ON d.id = r.device_id AND ($__timeFilter(r.assessed_at))\nWHERE ($__timeFilter(d.last_seen_at))\nGROUP BY d.purdue_level\nORDER BY d.purdue_level",
           "refId": "A",
           "select": [
             [
@@ -622,7 +622,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  src_zone.name as source_zone,\n  dst_zone.name as dest_zone,\n  fr.protocol as protocol,\n  fr.port::text as port,\n  fr.action as status,\n  CASE WHEN fr.enabled THEN 'Enabled' ELSE 'Disabled' END as enabled,\n  fr.description\nFROM firewall_rules fr\nJOIN security_zones src_zone ON fr.source_zone_id = src_zone.zone_id\nJOIN security_zones dst_zone ON fr.destination_zone_id = dst_zone.zone_id\nORDER BY fr.source_zone_id, fr.destination_zone_id, fr.action DESC\nLIMIT 20",
+          "rawSql": "SELECT\n  src_zone.name as source_zone,\n  dst_zone.name as dest_zone,\n  fr.protocol as protocol,\n  fr.port::text as port,\n  fr.action as status,\n  CASE WHEN fr.enabled THEN 'Enabled' ELSE 'Disabled' END as enabled,\n  fr.description\nFROM firewall_rules fr\nJOIN security_zones src_zone ON fr.source_zone_id = src_zone.id\nJOIN security_zones dst_zone ON fr.destination_zone_id = dst_zone.id\nORDER BY fr.source_zone_id, fr.destination_zone_id, fr.action DESC\nLIMIT 20",
           "refId": "A",
           "select": [
             [
@@ -729,7 +729,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  date_trunc('5 minutes', c.last_seen_at)::timestamp as time,\n  CASE\n    WHEN src_zone.name != dst_zone.name THEN src_zone.name || ' → ' || dst_zone.name\n    ELSE 'Intra-Zone'\n  END as zone_pair,\n  AVG(c.latency_ms)::int as latency\nFROM connections c\nJOIN devices d1 ON c.source_device_id = d1.id\nJOIN devices d2 ON c.target_device_id = d2.id\nLEFT JOIN security_zones src_zone ON d1.security_zone = src_zone.zone_id\nLEFT JOIN security_zones dst_zone ON d2.security_zone = dst_zone.zone_id\nWHERE ($__timeFilter(c.last_seen_at))\n  AND c.latency_ms > 0\nGROUP BY time, zone_pair\nORDER BY time DESC",
+          "rawSql": "SELECT\n  date_trunc('5 minutes', c.last_seen_at)::timestamp as time,\n  CASE\n    WHEN src_zone.name != dst_zone.name THEN src_zone.name || ' → ' || dst_zone.name\n    ELSE 'Intra-Zone'\n  END as zone_pair,\n  AVG(c.latency_ms)::int as latency\nFROM connections c\nJOIN devices d1 ON c.source_device_id = d1.id\nJOIN devices d2 ON c.target_device_id = d2.id\nLEFT JOIN security_zones src_zone ON d1.security_zone = src_zone.zone_type\nLEFT JOIN security_zones dst_zone ON d2.security_zone = dst_zone.zone_type\nWHERE ($__timeFilter(c.last_seen_at))\n  AND c.latency_ms > 0\nGROUP BY time, zone_pair\nORDER BY time DESC",
           "refId": "A",
           "select": [
             [
@@ -762,7 +762,7 @@
     "list": []
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-7d",
     "to": "now"
   },
   "timepicker": {},

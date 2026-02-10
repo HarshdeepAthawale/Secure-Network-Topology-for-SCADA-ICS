@@ -101,6 +101,19 @@ resource "aws_iot_policy_attachment" "ec2_ingest" {
   target = aws_iot_certificate.ec2_ingest.arn
 }
 
+# Store EC2 IoT cert + private key in Secrets Manager (describe-certificate does not return private key)
+resource "aws_secretsmanager_secret" "ec2_iot_cert" {
+  name = "${var.name_prefix}/ec2-iot-cert"
+}
+
+resource "aws_secretsmanager_secret_version" "ec2_iot_cert" {
+  secret_id = aws_secretsmanager_secret.ec2_iot_cert.id
+  secret_string = jsonencode({
+    certificatePem = aws_iot_certificate.ec2_ingest.certificate_pem
+    privateKey     = aws_iot_certificate.ec2_ingest.private_key
+  })
+}
+
 resource "aws_iot_policy_attachment" "collector" {
   policy = aws_iot_policy.collector.name
   target = aws_iot_certificate.collector.arn
@@ -211,4 +224,8 @@ output "ec2_certificate_pem" {
 output "ec2_private_key" {
   value     = aws_iot_certificate.ec2_ingest.private_key
   sensitive = true
+}
+
+output "ec2_iot_secret_arn" {
+  value = aws_secretsmanager_secret.ec2_iot_cert.arn
 }

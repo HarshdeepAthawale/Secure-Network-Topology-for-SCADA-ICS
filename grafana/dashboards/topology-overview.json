@@ -404,7 +404,7 @@
   "style": "dark",
   "tags": ["scada", "topology", "ot-security"],
   "templating": { "list": [] },
-  "time": { "from": "now-6h", "to": "now" },
+  "time": { "from": "now-7d", "to": "now" },
   "timepicker": {},
   "timezone": "browser",
   "title": "SCADA Topology Overview",
