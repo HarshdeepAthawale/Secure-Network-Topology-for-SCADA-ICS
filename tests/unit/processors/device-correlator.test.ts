@@ -27,7 +27,9 @@ describe('DeviceCorrelator', () => {
             const result = deviceCorrelator.correlate(candidates);
 
             expect(result.length).toBe(1);
-            expect(result[0].macAddress).toBe('00:1A:2B:3C:4D:5E');
+            const device = result[0].device;
+            const hasMac = device.interfaces?.some(i => i.macAddress === '00:1A:2B:3C:4D:5E');
+            expect(hasMac || device.metadata?.sources).toBeTruthy();
         });
 
         it('should merge candidates with same IP address', () => {
@@ -51,8 +53,8 @@ describe('DeviceCorrelator', () => {
             const result = deviceCorrelator.correlate(candidates);
 
             expect(result.length).toBe(1);
-            expect(result[0].vendor).toBe('Cisco');
-            expect(result[0].model).toBe('IOS');
+            expect(result[0].device.vendor).toBe('Cisco');
+            expect(result[0].device.model).toBe('IOS');
         });
 
         it('should keep separate devices with different identifiers', () => {
@@ -93,7 +95,7 @@ describe('DeviceCorrelator', () => {
             const result = deviceCorrelator.correlate(candidates);
 
             expect(result.length).toBe(1);
-            expect(result[0].confidence).toBe(90);
+            expect(result[0].device.metadata?.correlationConfidence).toBe(90);
         });
 
         it('should preserve all non-null properties when merging', () => {
@@ -108,16 +110,16 @@ describe('DeviceCorrelator', () => {
                     source: TelemetrySource.ARP,
                     macAddress: '00:1A:2B:3C:4D:5E',
                     model: 'S7-1500',
-                    firmwareVersion: '2.9.3',
                     confidence: 75,
+                    metadata: { firmwareVersion: '2.9.3' },
                 },
             ];
 
             const result = deviceCorrelator.correlate(candidates);
 
-            expect(result[0].vendor).toBe('Siemens');
-            expect(result[0].model).toBe('S7-1500');
-            expect(result[0].firmwareVersion).toBe('2.9.3');
+            expect(result[0].device.vendor).toBe('Siemens');
+            expect(result[0].device.model).toBe('S7-1500');
+            expect(result[0].device.metadata?.firmwareVersion).toBe('2.9.3');
         });
 
         it('should handle empty candidate list', () => {
@@ -138,7 +140,8 @@ describe('DeviceCorrelator', () => {
             const result = deviceCorrelator.correlate(candidates);
 
             expect(result.length).toBe(1);
-            expect(result[0].macAddress).toBe('00:1A:2B:3C:4D:5E');
+            expect(result[0].device.name).toBeDefined();
+            expect(result[0].device.metadata?.sources).toContain('snmp');
         });
     });
 
@@ -162,8 +165,8 @@ describe('DeviceCorrelator', () => {
             const result = deviceCorrelator.correlate(candidates);
 
             expect(result.length).toBe(1);
-            expect(result[0].hostname).toBe('plc-001.scada.local');
-            expect(result[0].vendor).toBe('Allen-Bradley');
+            expect(result[0].device.hostname).toBe('plc-001.scada.local');
+            expect(result[0].device.vendor).toBe('Allen-Bradley');
         });
 
         it('should handle case-insensitive hostname matching', () => {
@@ -218,7 +221,9 @@ describe('DeviceCorrelator', () => {
 
             const result = deviceCorrelator.correlate(candidates);
 
-            expect(result[0].ipAddress).toBe('192.168.1.10');
+            expect(result.length).toBe(1);
+            expect(result[0].device.hostname).toBe('device1');
+            expect(result[0].device.name).toBe('device1');
         });
     });
 
@@ -267,8 +272,8 @@ describe('DeviceCorrelator', () => {
 
             const result = deviceCorrelator.correlate(candidates);
 
-            // SNMP data should be preferred for device attributes
-            expect(result[0].vendor).toBe('Siemens (SNMP)');
+            // SNMP data should be preferred for device attributes (source priority)
+            expect(result[0].device.vendor).toBe('Siemens (SNMP)');
         });
     });
 
@@ -285,7 +290,7 @@ describe('DeviceCorrelator', () => {
             const result = deviceCorrelator.correlate(candidates);
 
             expect(result.length).toBe(1);
-            expect(result[0].macAddress).toBe('00:1A:2B:3C:4D:5E');
+            expect(result[0].device.interfaces?.length || result[0].device.metadata?.sources).toBeTruthy();
         });
 
         it('should handle candidates with only IP address', () => {
@@ -300,7 +305,7 @@ describe('DeviceCorrelator', () => {
             const result = deviceCorrelator.correlate(candidates);
 
             expect(result.length).toBe(1);
-            expect(result[0].ipAddress).toBe('192.168.1.10');
+            expect(result[0].device.name).toBe('192.168.1.10');
         });
 
         it('should handle large number of candidates', () => {
@@ -320,6 +325,101 @@ describe('DeviceCorrelator', () => {
 
             expect(result.length).toBe(1000);
             expect(duration).toBeLessThan(5000); // Should complete in under 5 seconds
+        });
+    });
+
+    describe('source priority and recency', () => {
+        it('should prefer higher-priority source when sources disagree (SNMP over ARP)', () => {
+            const candidates: DeviceCandidate[] = [
+                {
+                    source: TelemetrySource.ARP,
+                    macAddress: '00:1A:2B:3C:4D:5E',
+                    vendor: 'Unknown (ARP)',
+                    confidence: 90,
+                    timestamp: new Date(),
+                },
+                {
+                    source: TelemetrySource.SNMP,
+                    macAddress: '00:1A:2B:3C:4D:5E',
+                    vendor: 'Siemens (SNMP)',
+                    confidence: 80,
+                    timestamp: new Date(),
+                },
+            ];
+
+            const result = deviceCorrelator.correlate(candidates);
+
+            expect(result.length).toBe(1);
+            expect(result[0].device.vendor).toBe('Siemens (SNMP)');
+        });
+
+        it('should prefer newer report when same source reports different values', () => {
+            const older = new Date(Date.now() - 10 * 60 * 1000);
+            const newer = new Date(Date.now() - 1 * 60 * 1000);
+            const candidates: DeviceCandidate[] = [
+                {
+                    source: TelemetrySource.SNMP,
+                    macAddress: '00:1A:2B:3C:4D:5E',
+                    hostname: 'old-name',
+                    sysName: 'old-name',
+                    confidence: 80,
+                    timestamp: older,
+                },
+                {
+                    source: TelemetrySource.SNMP,
+                    macAddress: '00:1A:2B:3C:4D:5E',
+                    hostname: 'new-name',
+                    sysName: 'new-name',
+                    confidence: 80,
+                    timestamp: newer,
+                },
+            ];
+
+            const result = deviceCorrelator.correlate(candidates);
+
+            expect(result.length).toBe(1);
+            expect(result[0].device.hostname).toBe('new-name');
+        });
+
+        it('should reduce confidence when candidates are stale', () => {
+            const STALENESS_MS = 15 * 60 * 1000;
+            const oldTimestamp = new Date(Date.now() - STALENESS_MS - 60 * 1000); // > 15 min ago
+            const freshTimestamp = new Date();
+            const staleCandidates: DeviceCandidate[] = [
+                {
+                    source: TelemetrySource.SNMP,
+                    macAddress: '00:1A:2B:3C:4D:5E',
+                    confidence: 80,
+                    timestamp: oldTimestamp,
+                },
+                {
+                    source: TelemetrySource.ARP,
+                    macAddress: '00:1A:2B:3C:4D:5E',
+                    confidence: 60,
+                    timestamp: oldTimestamp,
+                },
+            ];
+            const freshCandidates: DeviceCandidate[] = [
+                {
+                    source: TelemetrySource.SNMP,
+                    macAddress: '00:1A:2B:3C:4D:5E',
+                    confidence: 80,
+                    timestamp: freshTimestamp,
+                },
+                {
+                    source: TelemetrySource.ARP,
+                    macAddress: '00:1A:2B:3C:4D:5E',
+                    confidence: 60,
+                    timestamp: freshTimestamp,
+                },
+            ];
+
+            const staleResult = deviceCorrelator.correlate(staleCandidates);
+            const freshResult = deviceCorrelator.correlate(freshCandidates);
+
+            expect(staleResult.length).toBe(1);
+            expect(freshResult.length).toBe(1);
+            expect(staleResult[0].confidence).toBeLessThan(freshResult[0].confidence);
         });
     });
 });

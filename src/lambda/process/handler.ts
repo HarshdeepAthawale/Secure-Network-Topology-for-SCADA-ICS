@@ -113,6 +113,8 @@ function processTelemetry(telemetry: TelemetryData): { candidates: DeviceCandida
   const candidates: DeviceCandidate[] = [];
   const newAlerts: Alert[] = [];
 
+  const telemetryTime = telemetry.timestamp instanceof Date ? telemetry.timestamp : new Date(telemetry.timestamp as string | number);
+
   switch (telemetry.source) {
     case TelemetrySource.SNMP: {
       const parsed = snmpParser.parse(telemetry);
@@ -127,6 +129,7 @@ function processTelemetry(telemetry: TelemetryData): { candidates: DeviceCandida
           interfaces: parsed.interfaces,
           confidence: 80,
           metadata: { sysDescr: parsed.sysDescr },
+          timestamp: telemetryTime,
         });
       }
       break;
@@ -143,6 +146,7 @@ function processTelemetry(telemetry: TelemetryData): { candidates: DeviceCandida
           ipAddress: l2Device.ipAddresses[0],
           vendor: l2Device.vendor,
           confidence: 60,
+          timestamp: telemetryTime,
         });
       }
       break;
@@ -158,12 +162,14 @@ function processTelemetry(telemetry: TelemetryData): { candidates: DeviceCandida
           ipAddress: flow.srcAddress,
           confidence: 40,
           metadata: { role: 'source', protocol: flow.protocol },
+          timestamp: telemetryTime,
         });
         candidates.push({
           source: 'netflow',
           ipAddress: flow.dstAddress,
           confidence: 40,
           metadata: { role: 'destination', protocol: flow.protocol },
+          timestamp: telemetryTime,
         });
       }
       break;
@@ -184,6 +190,7 @@ function processTelemetry(telemetry: TelemetryData): { candidates: DeviceCandida
             ipAddress: event.extractedData.sourceIP,
             hostname: event.hostname,
             confidence: 50,
+            timestamp: telemetryTime,
           });
         }
       }
