@@ -174,12 +174,16 @@ cd ..  # Back to project root
 ## Phase 4: Local Development Setup
 
 ### 4.1 Start Local PostgreSQL
+Set a strong password via environment (never commit real passwords):
+```bash
+export POSTGRES_PASSWORD="your_secure_password"  # or use a secrets manager
+```
 ```bash
 # Using Docker
 docker run -d --name scada-postgres \
   -e POSTGRES_DB=scada_topology \
   -e POSTGRES_USER=scada_admin \
-  -e 'POSTGRES_PASSWORD=@Harshdeep8432' \
+  -e "POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-your_secure_password}" \
   -p 5432:5432 \
   -v scada_postgres_data:/var/lib/postgresql/data \
   postgres:14-alpine
@@ -240,7 +244,7 @@ This script will:
 curl https://<api-gateway-id>.execute-api.ap-south-1.amazonaws.com/dev/health
 
 # Test database connection
-PGPASSWORD='@Harshdeep8432' psql -h localhost -U scada_admin -d scada_topology -c "SELECT 1"
+PGPASSWORD="${POSTGRES_PASSWORD:-your_secure_password}" psql -h localhost -U scada_admin -d scada_topology -c "SELECT 1"
 
 # Test IoT connection (requires certificates)
 npm run collector:test

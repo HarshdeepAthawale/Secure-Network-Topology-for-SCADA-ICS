@@ -522,8 +522,8 @@ opcuaCollector.addTarget({
   host: '10.0.1.100',
   endpointUrl: 'opc.tcp://10.0.1.100:4840',
   securityMode: 'SignAndEncrypt',
-  username: 'operator',
-  password: 'password',
+  username: process.env.OPCUA_USER ?? 'operator',
+  password: process.env.OPCUA_PASSWORD ?? 'your_opcua_password', // In production: set OPCUA_PASSWORD (env or secrets); do not commit real credentials
   monitoredNodes: ['ns=2;s=Temperature', 'ns=2;s=Pressure'],
   samplingInterval: 1000,
 });
