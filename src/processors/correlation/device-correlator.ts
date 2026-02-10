@@ -7,6 +7,12 @@ import { DEVICE_TYPE_PURDUE_LEVEL, PURDUE_TO_ZONE } from '../../utils/constants'
 import { logger } from '../../utils/logger';
 import { generateUUID } from '../../utils/crypto';
 
+/** Source priority for merge: lower index = higher priority (wins on conflict). */
+export const SOURCE_PRIORITY_ORDER = ['snmp', 'arp', 'syslog', 'netflow'] as const;
+
+/** Staleness window in minutes; data older than this contributes less to confidence. */
+export const STALENESS_MINUTES = parseInt(process.env.TELEMETRY_STALENESS_MINUTES ?? '15', 10) || 15;
+
 export interface DeviceCandidate {
   source: string;
   ipAddress?: string;
@@ -19,6 +25,8 @@ export interface DeviceCandidate {
   interfaces?: NetworkInterface[];
   metadata?: Record<string, unknown>;
   confidence: number;
+  /** Telemetry timestamp for recency ordering and freshness scoring. */
+  timestamp?: Date;
 }
 
 export interface CorrelationResult {
@@ -54,7 +62,8 @@ export class DeviceCorrelator {
 
       matches.forEach(idx => processed.add(idx));
       const matchedCandidates = matches.map(idx => candidates[idx]);
-      const result = this.mergeAndCorrelate(matchedCandidates);
+      const sortedCandidates = this.sortCandidatesByPriorityAndRecency(matchedCandidates);
+      const result = this.mergeAndCorrelate(sortedCandidates);
       results.push(result);
     }
 
@@ -82,6 +91,25 @@ export class DeviceCorrelator {
     }
 
     return false;
+  }
+
+  /**
+   * Sort candidates so higher-priority source wins, then newest first within same source.
+   * Missing timestamp is treated as oldest.
+   */
+  private sortCandidatesByPriorityAndRecency(candidates: DeviceCandidate[]): DeviceCandidate[] {
+    const priorityIndex = (source: string): number => {
+      const i = SOURCE_PRIORITY_ORDER.indexOf(source as (typeof SOURCE_PRIORITY_ORDER)[number]);
+      return i >= 0 ? i : SOURCE_PRIORITY_ORDER.length;
+    };
+    const ts = (c: DeviceCandidate): number =>
+      c.timestamp ? c.timestamp.getTime() : 0;
+    return [...candidates].sort((a, b) => {
+      const pa = priorityIndex(a.source);
+      const pb = priorityIndex(b.source);
+      if (pa !== pb) return pa - pb;
+      return ts(b) - ts(a); // newest first
+    });
   }
 
   private mergeAndCorrelate(candidates: DeviceCandidate[]): CorrelationResult {
@@ -265,20 +293,35 @@ export class DeviceCorrelator {
     }
   }
 
-  private calculateConfidence(candidates: DeviceCandidate[], correlatedBy: string[]): number {
-    let confidence = 0;
+  /**
+   * Freshness factor in [0, 1]: 1 when timestamp is now, 0 when older than STALENESS_MINUTES.
+   * Missing timestamp is treated as fresh (1) for backward compatibility when callers do not set it.
+   */
+  private freshnessFactor(candidate: DeviceCandidate): number {
+    if (!candidate.timestamp) return 1;
+    const ageMinutes = (Date.now() - candidate.timestamp.getTime()) / 60_000;
+    return Math.max(0, 1 - ageMinutes / STALENESS_MINUTES);
+  }
 
-    // More sources = higher confidence
-    confidence += Math.min(candidates.length * 15, 45);
+  private calculateConfidence(candidates: DeviceCandidate[], correlatedBy: string[]): number {
+    const factors = candidates.map(c => this.freshnessFactor(c));
+
+    // Effective source count: weight by freshness (stale data contributes less)
+    const effectiveSourceCount = factors.reduce((sum, f) => sum + f, 0);
+    let confidence = Math.min(effectiveSourceCount * 15, 45);
 
     // Multiple correlation methods = higher confidence
     confidence += correlatedBy.length * 15;
 
-    // Average candidate confidence
-    const avgConfidence = candidates.reduce((sum, c) => sum + c.confidence, 0) / candidates.length;
-    confidence += avgConfidence * 0.4;
+    // Weighted average candidate confidence by freshness
+    const totalWeight = factors.reduce((s, f) => s + f, 0);
+    const weightedConfidence =
+      totalWeight > 0
+        ? candidates.reduce((sum, c, i) => sum + c.confidence * factors[i], 0) / totalWeight
+        : 0;
+    confidence += weightedConfidence * 0.4;
 
-    return Math.min(confidence, 100);
+    return Math.min(Math.round(confidence), 100);
   }
 
   findDevice(criteria: { mac?: string; ip?: string; hostname?: string }): Device | undefined {
