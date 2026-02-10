@@ -136,6 +136,8 @@ This document describes the complete data flow architecture: **Lambda → IoT Co
 
 **Data Source**: PostgreSQL connection to RDS
 
+**Grafana in AWS**: Grafana can run on an EC2 instance in the same VPC with RDS as the datasource (credentials from Secrets Manager). Access is via SSM port forwarding. See [DEPLOYMENT_COMPLETE.md](../DEPLOYMENT_COMPLETE.md#grafana-in-aws) for instance ID, port-forward command, and verification.
+
 **Dashboards**:
 - Real-time Topology Dashboard
 - Risk Heatmap Dashboard

@@ -4,6 +4,10 @@ terraform {
   required_version = ">= 1.5.0"
 
   required_providers {
+    archive = {
+      source  = "hashicorp/archive"
+      version = "~> 2.4"
+    }
     aws = {
       source  = "hashicorp/aws"
       version = "~> 5.0"
@@ -126,6 +130,47 @@ resource "aws_security_group_rule" "rds_ingress_from_ec2" {
   source_security_group_id = module.ec2.security_group_id
   security_group_id        = module.vpc.rds_security_group_id
   description              = "PostgreSQL from EC2 MQTT ingest"
+}
+
+# Grafana dashboards archive (uploaded to S3 for EC2 user-data to fetch)
+data "archive_file" "grafana_dashboards" {
+  type        = "zip"
+  source_dir  = "${path.module}/../grafana/dashboards"
+  output_path = "${path.module}/grafana-dashboards.zip"
+}
+
+resource "aws_s3_object" "grafana_dashboards" {
+  bucket  = module.s3.reports_bucket_name
+  key     = "grafana-dashboards/dashboards.zip"
+  source  = data.archive_file.grafana_dashboards.output_path
+  etag    = data.archive_file.grafana_dashboards.output_base64sha256
+}
+
+# Grafana EC2 instance (private subnet; access via SSM port forwarding)
+module "grafana" {
+  source = "./modules/grafana"
+
+  name_prefix             = local.name_prefix
+  vpc_id                  = module.vpc.vpc_id
+  subnet_id               = module.vpc.private_subnet_ids[1]
+  rds_security_group_id   = module.vpc.rds_security_group_id
+  db_secret_arn           = module.rds.secret_arn
+  region                  = var.aws_region
+  instance_type           = var.grafana_instance_type
+  grafana_admin_password  = var.grafana_admin_password
+  s3_dashboards_bucket    = module.s3.reports_bucket_name
+  s3_dashboards_key       = "grafana-dashboards/dashboards.zip"
+}
+
+# Allow Grafana EC2 to reach RDS
+resource "aws_security_group_rule" "rds_ingress_from_grafana" {
+  type                     = "ingress"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  source_security_group_id = module.grafana.security_group_id
+  security_group_id        = module.vpc.rds_security_group_id
+  description              = "PostgreSQL from Grafana EC2"
 }
 
 # CloudWatch
