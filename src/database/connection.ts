@@ -238,11 +238,16 @@ export class DatabaseConnection {
         whereClause: string,
         whereParams: unknown[]
     ): Promise<number> {
+        if (!this.pool || !this.isConnected) {
+            await this.connect();
+        }
+
         const sql = `DELETE FROM ${table} WHERE ${whereClause}`;
-        const result = await this.query(sql, whereParams);
-        // pg returns rows affected in a different way, we'll use the direct query result
-        const deleteResult: QueryResult = await this.pool!.query(sql, whereParams);
-        return deleteResult.rowCount || 0;
+        const result: QueryResult = await this.pool!.query({
+            text: sql,
+            values: whereParams,
+        });
+        return result.rowCount ?? 0;
     }
 
     /**
