@@ -58,4 +58,46 @@
 - [x] EC2 instance with user-data (Secrets Manager cert + DB, S3 tarball, Node 18, systemd)
 - [x] EC2 service `scada-mqtt-ingest` active; DB connection established
 - [x] RDS ingress from EC2; data flow Lambda → IoT → EC2 → RDS
-- [ ] Grafana (optional): connect to RDS and open dashboards
+- [x] Grafana in AWS: EC2 instance in VPC with RDS datasource; access via SSM port forwarding
+
+## Grafana in AWS
+
+Grafana runs on a dedicated EC2 instance in the same VPC (private subnet). It connects to RDS using credentials from Secrets Manager and loads dashboards from an S3-provisioned zip. Access is via **SSM port forwarding** only (no public endpoint).
+
+### Get the Grafana instance ID
+
+- **Terraform**: After `terraform apply`, run `terraform output grafana_instance_id`.
+- **Console**: EC2 → Instances → filter by name `scada-{env}-grafana`.
+- **CLI**: `aws ec2 describe-instances --filters "Name=tag:Name,Values=scada-prod-grafana" --query 'Reservations[0].Instances[0].InstanceId' --output text --region ap-south-1`
+
+### Access Grafana (SSM port forward)
+
+From a machine with AWS CLI and SSM access (same account/region):
+
+```bash
+aws ssm start-session --target <grafana-instance-id> \
+  --document-name AWS-StartPortForwardingSessionToRemoteHost \
+  --parameters '{"host":["localhost"],"portNumber":["3000"],"localPortNumber":["3000"]}' \
+  --region ap-south-1
+```
+
+Then open **http://localhost:3000** in a browser. Log in with user `admin` and the password set in Terraform (`grafana_admin_password` variable; default `admin`—use a strong value in production).
+
+Example one-liner from Terraform output:
+
+```bash
+terraform output -raw grafana_ssm_port_forward_command
+```
+
+### Verification
+
+1. **Instance and container**: SSM into the Grafana instance and run `sudo docker ps`; the `grafana` container should be running.
+2. **Datasource**: In Grafana UI, go to **Configuration → Data sources**. The **PostgreSQL** datasource (uid `postgres`) should show **Save & test** as successful.
+3. **Dashboards**: Open **Dashboards → SCADA** (or browse). Set the time range to include recent data; topology and security dashboards should show data from RDS.
+
+### Terraform
+
+- **Module**: `infrastructure/modules/grafana` (IAM role, security group, EC2, user-data that installs Docker, fetches RDS secret, provisions datasource and dashboards from S3, runs Grafana container).
+- **RDS**: An ingress rule allows the Grafana EC2 security group to connect to RDS on port 5432.
+- **Variables**: `grafana_instance_type` (default `t3.small`), `grafana_admin_password` (sensitive).
+- **Outputs**: `grafana_instance_id`, `grafana_ssm_port_forward_command`.

@@ -32,4 +32,6 @@ The Terraform state may contain a **mix of dev and prod** resource names (e.g. s
 - Plan (EC2 only): `terraform plan -var=environment=prod -target=module.ec2`
 - Apply EC2: `terraform apply -var=environment=prod -target=module.ec2 -auto-approve`
 - Apply RDS ingress from EC2: `terraform apply -var=environment=prod -target=aws_security_group_rule.rds_ingress_from_ec2 -auto-approve`
+- Apply RDS ingress from Grafana: `terraform apply -var=environment=prod -target=aws_security_group_rule.rds_ingress_from_grafana -auto-approve`
 - Taint EC2 (force replace): `terraform taint 'module.ec2.aws_instance.mqtt_ingest'`
+- Taint Grafana EC2 (force replace): `terraform taint 'module.grafana.aws_instance.grafana'` (then re-apply `rds_ingress_from_grafana`)

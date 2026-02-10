@@ -76,3 +76,16 @@ variable "ec2_s3_deploy_key" {
   type        = string
   default     = ""
 }
+
+variable "grafana_instance_type" {
+  description = "EC2 instance type for Grafana"
+  type        = string
+  default     = "t3.small"
+}
+
+variable "grafana_admin_password" {
+  description = "Grafana admin UI password (use a strong value in production)"
+  type        = string
+  default     = "admin"
+  sensitive   = true
+}

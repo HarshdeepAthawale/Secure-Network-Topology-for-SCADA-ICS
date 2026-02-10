@@ -45,3 +45,13 @@ output "cloudwatch_dashboard_url" {
   description = "CloudWatch dashboard URL"
   value       = module.cloudwatch.dashboard_url
 }
+
+output "grafana_instance_id" {
+  description = "Grafana EC2 instance ID (use with SSM port forwarding to access Grafana at localhost:3000)"
+  value       = module.grafana.instance_id
+}
+
+output "grafana_ssm_port_forward_command" {
+  description = "Example AWS CLI command to port-forward Grafana to localhost:3000"
+  value       = "aws ssm start-session --target ${module.grafana.instance_id} --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters '{\"host\":[\"localhost\"],\"portNumber\":[\"3000\"],\"localPortNumber\":[\"3000\"]}' --region ${var.aws_region}"
+}
