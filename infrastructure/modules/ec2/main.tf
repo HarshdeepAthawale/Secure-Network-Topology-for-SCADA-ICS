@@ -31,38 +31,52 @@ resource "aws_iam_role_policy" "ec2_mqtt_ingest" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "iot:Connect",
-          "iot:Subscribe",
-          "iot:Receive"
-        ]
-        Resource = [
-          "arn:aws:iot:*:*:client/${var.name_prefix}-ec2-*",
-          "arn:aws:iot:*:*:topicfilter/scada/telemetry",
-          "arn:aws:iot:*:*:topic/scada/telemetry"
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "secretsmanager:GetSecretValue"
-        ]
-        Resource = "arn:aws:secretsmanager:*:*:secret:${var.name_prefix}/*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ]
-        Resource = "arn:aws:logs:*:*:*"
-      }
-    ]
+    Statement = concat(
+      [
+        {
+          Effect = "Allow"
+          Action = [
+            "iot:Connect",
+            "iot:Subscribe",
+            "iot:Receive"
+          ]
+          Resource = [
+            "arn:aws:iot:*:*:client/${var.name_prefix}-ec2-*",
+            "arn:aws:iot:*:*:topicfilter/scada/telemetry",
+            "arn:aws:iot:*:*:topic/scada/telemetry"
+          ]
+        },
+        {
+          Effect = "Allow"
+          Action = [
+            "secretsmanager:GetSecretValue"
+          ]
+          Resource = "arn:aws:secretsmanager:*:*:secret:${var.name_prefix}/*"
+        },
+        {
+          Effect = "Allow"
+          Action = [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+          ]
+          Resource = "arn:aws:logs:*:*:*"
+        }
+      ],
+      var.s3_deploy_bucket != "" ? [
+        {
+          Effect   = "Allow"
+          Action   = ["s3:GetObject"]
+          Resource = "arn:aws:s3:::${var.s3_deploy_bucket}/*"
+        }
+      ] : []
+    )
   })
+}
+
+resource "aws_iam_role_policy_attachment" "ec2_ssm" {
+  role       = aws_iam_role.ec2_mqtt_ingest.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
 resource "aws_iam_instance_profile" "ec2_mqtt_ingest" {
@@ -119,12 +133,15 @@ resource "aws_instance" "mqtt_ingest" {
   user_data = base64encode(templatefile("${path.module}/user-data.sh", {
     iot_endpoint        = var.iot_endpoint
     iot_certificate_arn = var.iot_certificate_arn
+    ec2_iot_secret_arn  = var.ec2_iot_secret_arn
     iot_thing_name      = var.iot_thing_name
     db_secret_arn       = var.db_secret_arn
     region              = var.region
     name_prefix         = var.name_prefix
     repo_url            = var.repo_url != "" ? var.repo_url : ""
     branch              = var.branch != "" ? var.branch : "master"
+    s3_deploy_bucket    = var.s3_deploy_bucket != "" ? var.s3_deploy_bucket : ""
+    s3_deploy_key       = var.s3_deploy_key != "" ? var.s3_deploy_key : ""
   }))
 
   root_block_device {
@@ -168,6 +185,11 @@ variable "iot_certificate_arn" {
   type = string
 }
 
+variable "ec2_iot_secret_arn" {
+  type        = string
+  description = "Secrets Manager ARN for EC2 IoT cert + private key"
+}
+
 variable "iot_thing_name" {
   type = string
 }
@@ -193,6 +215,16 @@ variable "repo_url" {
 variable "branch" {
   type    = string
   default = "master"
+}
+
+variable "s3_deploy_bucket" {
+  type    = string
+  default = ""
+}
+
+variable "s3_deploy_key" {
+  type    = string
+  default = ""
 }
 
 output "instance_id" {

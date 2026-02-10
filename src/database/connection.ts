@@ -48,7 +48,7 @@ export class DatabaseConnection {
             database: dbConfig.database,
             user: dbConfig.user,
             password: dbConfig.password,
-            ssl: dbConfig.ssl ? { rejectUnauthorized: true } : false,
+            ssl: dbConfig.ssl ? { rejectUnauthorized: dbConfig.sslRejectUnauthorized !== false } : false,
             max: dbConfig.poolSize,
             idleTimeoutMillis: 30000,
             connectionTimeoutMillis: 10000,

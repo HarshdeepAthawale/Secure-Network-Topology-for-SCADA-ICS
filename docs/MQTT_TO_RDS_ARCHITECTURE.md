@@ -256,6 +256,33 @@ The EC2 instance is automatically configured via user-data script, but you may n
 - RDS connection failures
 - IoT Core message processing delays
 
+## Verification
+
+After deployment, confirm the full pipeline:
+
+1. **Lambda**: CloudWatch Logs for `/{prefix}-generator` show successful publishes (e.g. "messagesPublished": 11).
+2. **EC2 service**: On the EC2 instance run `systemctl status scada-mqtt-ingest`; it should be active. Check `journalctl -u scada-mqtt-ingest -n 50` for MQTT connect and message processing.
+3. **RDS**: Query tables for recent data: `SELECT COUNT(*) FROM devices;` and `SELECT * FROM telemetry ORDER BY timestamp DESC LIMIT 5;` (use credentials from Secrets Manager).
+4. **Grafana**: If Grafana is configured with RDS as datasource, open dashboards and set time range to include recent data.
+
+**Scripts**:
+- **From your machine**: `./scripts/verify-pipeline.sh` (set `AWS_REGION` and `NAME_PREFIX`). Checks Lambda logs, EC2 instance presence, and RDS row counts. RDS checks require `psql` and network access to RDS (use a host in the VPC or skip).
+- **From the EC2 instance** (Session Manager or bastion): Copy and run `./scripts/verify-ec2-from-instance.sh [NAME_PREFIX]` (default `scada-prod`). It checks `systemctl status scada-mqtt-ingest`, recent logs, and RDS row counts using the instance IAM role. Installs `postgresql15` if `psql` is missing.
+
+**SSM Session Manager**: The EC2 instance has the `AmazonSSMManagedInstanceCore` policy and the VPC has SSM/ec2messages/ssmmessages endpoints. Once the instance appears in **Systems Manager > Fleet Manager**, use **Start session** to run the on-instance script. If the instance does not appear, allow a few minutes after boot or restart the SSM agent on the instance.
+
+**EC2 user-data**: User-data runs only at first boot. If you change user-data (e.g. IoT secret, DB env, or deploy path), replace the EC2 instance (e.g. `terraform taint module.ec2.aws_instance.mqtt_ingest` then `terraform apply`) or manually update certs, `/opt/scada/db.env`, app code, and restart `scada-mqtt-ingest`.
+
+### Optional S3 deploy
+
+To deploy the app from S3 instead of git clone:
+
+1. Build and pack: `./scripts/build-and-pack-for-ec2.sh` (produces `scada-app.tar.gz`).
+2. Create or choose an S3 bucket the EC2 instance role can access (when `ec2_s3_deploy_bucket` is set, the role gets GetObject on that bucket).
+3. Upload: `aws s3 cp scada-app.tar.gz s3://BUCKET/deploys/scada-app.tar.gz --region REGION`.
+4. Set Terraform variables: `ec2_s3_deploy_bucket = "BUCKET"`, `ec2_s3_deploy_key = "deploys/scada-app.tar.gz"` (e.g. in `terraform.tfvars` or `-var`).
+5. Replace the EC2 instance so user-data runs again: `terraform taint module.ec2.aws_instance.mqtt_ingest` then `terraform apply -var=environment=prod` (or your env).
+
 ## Troubleshooting
 
 ### Lambda Generator Not Publishing

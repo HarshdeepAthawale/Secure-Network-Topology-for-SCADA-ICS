@@ -107,7 +107,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  d.id,\n  d.name,\n  d.type::text AS title,\n  d.purdue_level AS purdue,\n  CASE\n    WHEN d.status = 'online' THEN 'green'\n    WHEN d.status = 'offline' THEN 'red'\n    WHEN d.status = 'unknown' THEN 'yellow'\n    ELSE 'gray'\n  END AS color,\n  CASE\n    WHEN d.purdue_level = 0 THEN 'L0-ICS'\n    WHEN d.purdue_level = 1 THEN 'L1-Control'\n    WHEN d.purdue_level = 2 THEN 'L2-Supervisory'\n    WHEN d.purdue_level = 3 THEN 'L3-Operations'\n    WHEN d.purdue_level = 4 THEN 'L4-Enterprise'\n    WHEN d.purdue_level = 5 THEN 'L5-DMZ'\n    ELSE 'Unknown'\n  END AS icon\nFROM devices d\nWHERE ($__timeFilter(d.last_seen_at))\n  AND d.purdue_level = ANY(string_to_array($purdue_level, ',')::int[])\n  AND ($security_zone = 'all' OR d.security_zone::text = $security_zone)\n  AND ($device_type = 'all' OR d.type::text = $device_type)\nORDER BY d.purdue_level, d.name",
+          "rawSql": "SELECT\n  d.id,\n  d.name,\n  d.type::text AS title,\n  d.purdue_level AS purdue,\n  CASE\n    WHEN d.status = 'online' THEN 'green'\n    WHEN d.status = 'offline' THEN 'red'\n    WHEN d.status = 'unknown' THEN 'yellow'\n    ELSE 'gray'\n  END AS color,\n  CASE\n    WHEN d.purdue_level::text = '0' THEN 'L0-ICS'\n    WHEN d.purdue_level::text = '1' THEN 'L1-Control'\n    WHEN d.purdue_level::text = '2' THEN 'L2-Supervisory'\n    WHEN d.purdue_level::text = '3' THEN 'L3-Operations'\n    WHEN d.purdue_level::text = '4' THEN 'L4-Enterprise'\n    WHEN d.purdue_level::text = '5' THEN 'L5-DMZ'\n    ELSE 'Unknown'\n  END AS icon\nFROM devices d\nWHERE ($__timeFilter(d.last_seen_at))\n  AND d.purdue_level::text = ANY(string_to_array($purdue_level, ','))\n  AND ($security_zone = 'all' OR d.security_zone::text = $security_zone)\n  AND ($device_type = 'all' OR d.type::text = $device_type)\nORDER BY d.purdue_level, d.name",
           "refId": "A",
           "select": [
             [
@@ -132,7 +132,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  c.source_device_id AS source,\n  c.target_device_id AS target,\n  c.protocol::text AS label,\n  CASE\n    WHEN c.is_secure THEN 'green'\n    ELSE 'red'\n  END AS color,\n  CASE\n    WHEN c.connection_type::text = 'ethernet' THEN '2'\n    WHEN c.connection_type::text = 'wireless' THEN '1'\n    ELSE '1.5'\n  END AS thickness\nFROM connections c\nJOIN devices d1 ON c.source_device_id = d1.id\nJOIN devices d2 ON c.target_device_id = d2.id\nWHERE ($__timeFilter(c.last_seen_at))\n  AND d1.purdue_level = ANY(string_to_array($purdue_level, ',')::int[])\n  AND d2.purdue_level = ANY(string_to_array($purdue_level, ',')::int[])\n  AND ($security_zone = 'all' OR d1.security_zone::text = $security_zone OR d2.security_zone::text = $security_zone)\nORDER BY c.last_seen_at DESC",
+          "rawSql": "SELECT\n  c.source_device_id AS source,\n  c.target_device_id AS target,\n  c.protocol::text AS label,\n  CASE\n    WHEN c.is_secure THEN 'green'\n    ELSE 'red'\n  END AS color,\n  CASE\n    WHEN c.connection_type::text = 'ethernet' THEN '2'\n    WHEN c.connection_type::text = 'wireless' THEN '1'\n    ELSE '1.5'\n  END AS thickness\nFROM connections c\nJOIN devices d1 ON c.source_device_id = d1.id\nJOIN devices d2 ON c.target_device_id = d2.id\nWHERE ($__timeFilter(c.last_seen_at))\n  AND d1.purdue_level::text = ANY(string_to_array($purdue_level, ','))\n  AND d2.purdue_level::text = ANY(string_to_array($purdue_level, ','))\n  AND ($security_zone = 'all' OR d1.security_zone::text = $security_zone OR d2.security_zone::text = $security_zone)\nORDER BY c.last_seen_at DESC",
           "refId": "B",
           "select": [
             [
@@ -208,7 +208,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  purdue_level,\n  COUNT(*) as count\nFROM devices\nWHERE ($__timeFilter(last_seen_at))\n  AND purdue_level = ANY(string_to_array($purdue_level, ',')::int[])\n  AND ($security_zone = 'all' OR security_zone::text = $security_zone)\n  AND ($device_type = 'all' OR type::text = $device_type)\nGROUP BY purdue_level\nORDER BY purdue_level",
+          "rawSql": "SELECT\n  purdue_level,\n  COUNT(*) as count\nFROM devices\nWHERE ($__timeFilter(last_seen_at))\n  AND purdue_level::text = ANY(string_to_array($purdue_level, ','))\n  AND ($security_zone = 'all' OR security_zone::text = $security_zone)\n  AND ($device_type = 'all' OR type::text = $device_type)\nGROUP BY purdue_level\nORDER BY purdue_level",
           "refId": "A",
           "select": [
             [
@@ -300,7 +300,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT c.id) as active_connections\nFROM connections c\nJOIN devices d1 ON c.source_device_id = d1.id\nJOIN devices d2 ON c.target_device_id = d2.id\nWHERE ($__timeFilter(c.last_seen_at))\n  AND d1.purdue_level = ANY(string_to_array($purdue_level, ',')::int[])\n  AND d2.purdue_level = ANY(string_to_array($purdue_level, ',')::int[])\n  AND ($security_zone = 'all' OR d1.security_zone::text = $security_zone OR d2.security_zone::text = $security_zone)",
+          "rawSql": "SELECT COUNT(DISTINCT c.id) as active_connections\nFROM connections c\nJOIN devices d1 ON c.source_device_id = d1.id\nJOIN devices d2 ON c.target_device_id = d2.id\nWHERE ($__timeFilter(c.last_seen_at))\n  AND d1.purdue_level::text = ANY(string_to_array($purdue_level, ','))\n  AND d2.purdue_level::text = ANY(string_to_array($purdue_level, ','))\n  AND ($security_zone = 'all' OR d1.security_zone::text = $security_zone OR d2.security_zone::text = $security_zone)",
           "refId": "A",
           "select": [
             [
@@ -405,7 +405,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  date_trunc('5 minutes', a.created_at)::timestamp AS time,\n  CASE\n    WHEN a.type = 'device_discovered' THEN 'Device Discovered'\n    WHEN a.type = 'device_removed' THEN 'Device Removed'\n    WHEN a.type = 'connection_added' THEN 'Connection Added'\n    WHEN a.type = 'connection_removed' THEN 'Connection Removed'\n    ELSE a.type\n  END AS metric,\n  COUNT(*) as count\nFROM alerts a\nWHERE ($__timeFilter(a.created_at))\n  AND a.type IN ('device_discovered', 'device_removed', 'connection_added', 'connection_removed')\nGROUP BY time, metric\nORDER BY time DESC",
+          "rawSql": "SELECT\n  date_trunc('5 minutes', a.created_at)::timestamp AS time,\n  CASE\n    WHEN a.type = 'security' THEN 'Security'\n    WHEN a.type = 'connectivity' THEN 'Connectivity'\n    WHEN a.type = 'compliance' THEN 'Compliance'\n    WHEN a.type = 'performance' THEN 'Performance'\n    WHEN a.type = 'configuration' THEN 'Configuration'\n    ELSE a.type::text\n  END AS metric,\n  COUNT(*) as count\nFROM alerts a\nWHERE ($__timeFilter(a.created_at))\n  AND a.type IN ('security', 'connectivity', 'compliance', 'performance', 'configuration')\nGROUP BY time, metric\nORDER BY time DESC",
           "refId": "A",
           "select": [
             [
@@ -486,7 +486,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  CASE\n    WHEN security_zone = 'L0-ICS' THEN 'Process Zone (L0)'\n    WHEN security_zone = 'L1-Control' THEN 'Control Zone (L1)'\n    WHEN security_zone = 'L2-Supervisory' THEN 'Supervisory Zone (L2)'\n    WHEN security_zone = 'L3-Operations' THEN 'Operations Zone (L3)'\n    WHEN security_zone = 'L4-Enterprise' THEN 'Enterprise Zone (L4)'\n    WHEN security_zone = 'L5-DMZ' THEN 'DMZ (L5)'\n    ELSE 'Unclassified'\n  END AS zone,\n  COUNT(*) as device_count\nFROM devices\nWHERE ($__timeFilter(last_seen_at))\n  AND purdue_level = ANY(string_to_array($purdue_level, ',')::int[])\n  AND ($security_zone = 'all' OR security_zone::text = $security_zone)\n  AND ($device_type = 'all' OR type::text = $device_type)\nGROUP BY security_zone\nORDER BY device_count DESC",
+          "rawSql": "SELECT\n  CASE\n    WHEN security_zone = 'process' THEN 'Process Zone (L0)'\n    WHEN security_zone = 'control' THEN 'Control Zone (L1)'\n    WHEN security_zone = 'supervisory' THEN 'Supervisory Zone (L2)'\n    WHEN security_zone = 'operations' THEN 'Operations Zone (L3)'\n    WHEN security_zone = 'enterprise' THEN 'Enterprise Zone (L4/L5)'\n    WHEN security_zone = 'dmz' THEN 'DMZ'\n    ELSE 'Unclassified'\n  END AS zone,\n  COUNT(*) as device_count\nFROM devices\nWHERE ($__timeFilter(last_seen_at))\n  AND purdue_level::text = ANY(string_to_array($purdue_level, ','))\n  AND ($security_zone = 'all' OR security_zone::text = $security_zone)\n  AND ($device_type = 'all' OR type::text = $device_type)\nGROUP BY security_zone\nORDER BY device_count DESC",
           "refId": "A",
           "select": [
             [
@@ -766,7 +766,7 @@
     ]
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-7d",
     "to": "now"
   },
   "timepicker": {},

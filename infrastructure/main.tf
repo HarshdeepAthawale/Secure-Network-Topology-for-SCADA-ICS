@@ -109,9 +109,23 @@ module "ec2" {
   iot_endpoint           = module.iot.iot_endpoint
   iot_certificate_arn    = module.iot.ec2_certificate_arn
   iot_thing_name         = module.iot.ec2_thing_name
+  ec2_iot_secret_arn     = module.iot.ec2_iot_secret_arn
   db_secret_arn          = module.rds.secret_arn
   region                 = var.aws_region
   instance_type          = var.ec2_instance_type
+  s3_deploy_bucket       = var.ec2_s3_deploy_bucket
+  s3_deploy_key          = var.ec2_s3_deploy_key
+}
+
+# Allow EC2 MQTT ingest to reach RDS (VPC module only allows Lambda by default)
+resource "aws_security_group_rule" "rds_ingress_from_ec2" {
+  type                     = "ingress"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  source_security_group_id = module.ec2.security_group_id
+  security_group_id        = module.vpc.rds_security_group_id
+  description              = "PostgreSQL from EC2 MQTT ingest"
 }
 
 # CloudWatch
@@ -120,7 +134,7 @@ module "cloudwatch" {
 
   name_prefix           = local.name_prefix
   environment           = var.environment
-  lambda_function_names = module.lambda.function_names
+  lambda_function_names = [for name in ["ingest", "process", "query", "generator"] : "${local.name_prefix}-${name}"]
   alert_email           = var.alert_email
   rds_instance_id       = module.rds.instance_id
   api_gateway_name      = module.lambda.api_name

@@ -40,6 +40,7 @@ const envSchema = z.object({
   DB_USER: z.string().default('scada_admin'),
   DB_PASSWORD: z.string().optional(),
   DB_SSL: z.string().transform(val => val === 'true').default('false'),
+  DB_SSL_REJECT_UNAUTHORIZED: z.string().transform(val => val !== 'false').default('true'),
   DB_POOL_SIZE: z.string().transform(Number).default('10'),
 
   // SNMP
@@ -180,6 +181,7 @@ class Config {
       user: this.env.DB_USER,
       password: this.env.DB_PASSWORD || '',
       ssl: this.env.DB_SSL,
+      sslRejectUnauthorized: this.env.DB_SSL_REJECT_UNAUTHORIZED,
       poolSize: this.env.DB_POOL_SIZE,
     };
   }
