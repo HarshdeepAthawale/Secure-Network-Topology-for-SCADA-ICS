@@ -107,7 +107,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  d.id,\n  d.name,\n  d.type::text AS title,\n  d.purdue_level AS purdue,\n  CASE\n    WHEN d.status = 'online' THEN 'green'\n    WHEN d.status = 'offline' THEN 'red'\n    WHEN d.status = 'unknown' THEN 'yellow'\n    ELSE 'gray'\n  END AS color,\n  CASE\n    WHEN d.purdue_level::text = '0' THEN 'L0-ICS'\n    WHEN d.purdue_level::text = '1' THEN 'L1-Control'\n    WHEN d.purdue_level::text = '2' THEN 'L2-Supervisory'\n    WHEN d.purdue_level::text = '3' THEN 'L3-Operations'\n    WHEN d.purdue_level::text = '4' THEN 'L4-Enterprise'\n    WHEN d.purdue_level::text = '5' THEN 'L5-DMZ'\n    ELSE 'Unknown'\n  END AS icon\nFROM devices d\nWHERE ($__timeFilter(d.last_seen_at))\n  AND d.purdue_level::text = ANY(string_to_array($purdue_level, ','))\n  AND ($security_zone = 'all' OR d.security_zone::text = $security_zone)\n  AND ($device_type = 'all' OR d.type::text = $device_type)\nORDER BY d.purdue_level, d.name",
+          "rawSql": "SELECT\n  d.id,\n  d.name,\n  d.type::text AS title,\n  d.purdue_level AS purdue,\n  CASE\n    WHEN d.status = 'online' THEN 'green'\n    WHEN d.status = 'offline' THEN 'red'\n    WHEN d.status = 'unknown' THEN 'yellow'\n    ELSE 'gray'\n  END AS color,\n  CASE\n    WHEN d.purdue_level::text = '0' THEN 'L0-ICS'\n    WHEN d.purdue_level::text = '1' THEN 'L1-Control'\n    WHEN d.purdue_level::text = '2' THEN 'L2-Supervisory'\n    WHEN d.purdue_level::text = '3' THEN 'L3-Operations'\n    WHEN d.purdue_level::text = '4' THEN 'L4-Enterprise'\n    WHEN d.purdue_level::text = '5' THEN 'L5-DMZ'\n    ELSE 'Unknown'\n  END AS icon\nFROM devices d\nWHERE d.last_seen_at >= NOW() - INTERVAL '7 days' AND d.last_seen_at <= NOW()\n  AND d.purdue_level::text = ANY(string_to_array($purdue_level, ','))\n  AND ($security_zone = 'all' OR d.security_zone::text = $security_zone)\n  AND ($device_type = 'all' OR d.type::text = $device_type)\nORDER BY d.purdue_level, d.name",
           "refId": "A",
           "select": [
             [
@@ -132,7 +132,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  c.source_device_id AS source,\n  c.target_device_id AS target,\n  c.protocol::text AS label,\n  CASE\n    WHEN c.is_secure THEN 'green'\n    ELSE 'red'\n  END AS color,\n  CASE\n    WHEN c.connection_type::text = 'ethernet' THEN '2'\n    WHEN c.connection_type::text = 'wireless' THEN '1'\n    ELSE '1.5'\n  END AS thickness\nFROM connections c\nJOIN devices d1 ON c.source_device_id = d1.id\nJOIN devices d2 ON c.target_device_id = d2.id\nWHERE ($__timeFilter(c.last_seen_at))\n  AND d1.purdue_level::text = ANY(string_to_array($purdue_level, ','))\n  AND d2.purdue_level::text = ANY(string_to_array($purdue_level, ','))\n  AND ($security_zone = 'all' OR d1.security_zone::text = $security_zone OR d2.security_zone::text = $security_zone)\nORDER BY c.last_seen_at DESC",
+          "rawSql": "SELECT\n  c.source_device_id AS source,\n  c.target_device_id AS target,\n  c.protocol::text AS label,\n  CASE\n    WHEN c.is_secure THEN 'green'\n    ELSE 'red'\n  END AS color,\n  CASE\n    WHEN c.connection_type::text = 'ethernet' THEN '2'\n    WHEN c.connection_type::text = 'wireless' THEN '1'\n    ELSE '1.5'\n  END AS thickness\nFROM connections c\nJOIN devices d1 ON c.source_device_id = d1.id\nJOIN devices d2 ON c.target_device_id = d2.id\nWHERE c.last_seen_at >= NOW() - INTERVAL '7 days' AND c.last_seen_at <= NOW()\n  AND d1.purdue_level::text = ANY(string_to_array($purdue_level, ','))\n  AND d2.purdue_level::text = ANY(string_to_array($purdue_level, ','))\n  AND ($security_zone = 'all' OR d1.security_zone::text = $security_zone OR d2.security_zone::text = $security_zone)\nORDER BY c.last_seen_at DESC",
           "refId": "B",
           "select": [
             [
@@ -208,7 +208,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  purdue_level,\n  COUNT(*) as count\nFROM devices\nWHERE ($__timeFilter(last_seen_at))\n  AND purdue_level::text = ANY(string_to_array($purdue_level, ','))\n  AND ($security_zone = 'all' OR security_zone::text = $security_zone)\n  AND ($device_type = 'all' OR type::text = $device_type)\nGROUP BY purdue_level\nORDER BY purdue_level",
+          "rawSql": "SELECT\n  purdue_level,\n  COUNT(*) as count\nFROM devices\nWHERE last_seen_at >= NOW() - INTERVAL '7 days' AND last_seen_at <= NOW()\n  AND purdue_level::text = ANY(string_to_array($purdue_level, ','))\n  AND ($security_zone = 'all' OR security_zone::text = $security_zone)\n  AND ($device_type = 'all' OR type::text = $device_type)\nGROUP BY purdue_level\nORDER BY purdue_level",
           "refId": "A",
           "select": [
             [
@@ -300,7 +300,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT c.id) as active_connections\nFROM connections c\nJOIN devices d1 ON c.source_device_id = d1.id\nJOIN devices d2 ON c.target_device_id = d2.id\nWHERE ($__timeFilter(c.last_seen_at))\n  AND d1.purdue_level::text = ANY(string_to_array($purdue_level, ','))\n  AND d2.purdue_level::text = ANY(string_to_array($purdue_level, ','))\n  AND ($security_zone = 'all' OR d1.security_zone::text = $security_zone OR d2.security_zone::text = $security_zone)",
+          "rawSql": "SELECT COUNT(DISTINCT c.id) as active_connections\nFROM connections c\nJOIN devices d1 ON c.source_device_id = d1.id\nJOIN devices d2 ON c.target_device_id = d2.id\nWHERE c.last_seen_at >= NOW() - INTERVAL '7 days' AND c.last_seen_at <= NOW()\n  AND d1.purdue_level::text = ANY(string_to_array($purdue_level, ','))\n  AND d2.purdue_level::text = ANY(string_to_array($purdue_level, ','))\n  AND ($security_zone = 'all' OR d1.security_zone::text = $security_zone OR d2.security_zone::text = $security_zone)",
           "refId": "A",
           "select": [
             [
@@ -486,7 +486,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  CASE\n    WHEN security_zone = 'process' THEN 'Process Zone (L0)'\n    WHEN security_zone = 'control' THEN 'Control Zone (L1)'\n    WHEN security_zone = 'supervisory' THEN 'Supervisory Zone (L2)'\n    WHEN security_zone = 'operations' THEN 'Operations Zone (L3)'\n    WHEN security_zone = 'enterprise' THEN 'Enterprise Zone (L4/L5)'\n    WHEN security_zone = 'dmz' THEN 'DMZ'\n    ELSE 'Unclassified'\n  END AS zone,\n  COUNT(*) as device_count\nFROM devices\nWHERE ($__timeFilter(last_seen_at))\n  AND purdue_level::text = ANY(string_to_array($purdue_level, ','))\n  AND ($security_zone = 'all' OR security_zone::text = $security_zone)\n  AND ($device_type = 'all' OR type::text = $device_type)\nGROUP BY security_zone\nORDER BY device_count DESC",
+          "rawSql": "SELECT\n  CASE\n    WHEN security_zone = 'process' THEN 'Process Zone (L0)'\n    WHEN security_zone = 'control' THEN 'Control Zone (L1)'\n    WHEN security_zone = 'supervisory' THEN 'Supervisory Zone (L2)'\n    WHEN security_zone = 'operations' THEN 'Operations Zone (L3)'\n    WHEN security_zone = 'enterprise' THEN 'Enterprise Zone (L4/L5)'\n    WHEN security_zone = 'dmz' THEN 'DMZ'\n    ELSE 'Unclassified'\n  END AS zone,\n  COUNT(*) as device_count\nFROM devices\nWHERE last_seen_at >= NOW() - INTERVAL '7 days' AND last_seen_at <= NOW()\n  AND purdue_level::text = ANY(string_to_array($purdue_level, ','))\n  AND ($security_zone = 'all' OR security_zone::text = $security_zone)\n  AND ($device_type = 'all' OR type::text = $device_type)\nGROUP BY security_zone\nORDER BY device_count DESC",
           "refId": "A",
           "select": [
             [
@@ -567,7 +567,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  UPPER(protocol) as protocol,\n  COUNT(*) as connection_count\nFROM connections\nWHERE ($__timeFilter(last_seen_at))\nGROUP BY protocol\nORDER BY connection_count DESC",
+          "rawSql": "SELECT\n  UPPER(protocol) as protocol,\n  COUNT(*) as connection_count\nFROM connections\nWHERE last_seen_at >= NOW() - INTERVAL '7 days' AND last_seen_at <= NOW()\nGROUP BY protocol\nORDER BY connection_count DESC",
           "refId": "A",
           "select": [
             [
@@ -668,36 +668,41 @@
           },
           {
             "selected": false,
-            "text": "L0-ICS",
-            "value": "L0-ICS"
+            "text": "Process (L0)",
+            "value": "process"
           },
           {
             "selected": false,
-            "text": "L1-Control",
-            "value": "L1-Control"
+            "text": "Control (L1)",
+            "value": "control"
           },
           {
             "selected": false,
-            "text": "L2-Supervisory",
-            "value": "L2-Supervisory"
+            "text": "Supervisory (L2)",
+            "value": "supervisory"
           },
           {
             "selected": false,
-            "text": "L3-Operations",
-            "value": "L3-Operations"
+            "text": "Operations (L3)",
+            "value": "operations"
           },
           {
             "selected": false,
-            "text": "L4-Enterprise",
-            "value": "L4-Enterprise"
+            "text": "Enterprise (L4)",
+            "value": "enterprise"
           },
           {
             "selected": false,
-            "text": "L5-DMZ",
-            "value": "L5-DMZ"
+            "text": "DMZ (L5)",
+            "value": "dmz"
+          },
+          {
+            "selected": false,
+            "text": "Untrusted",
+            "value": "untrusted"
           }
         ],
-        "query": "L0-ICS,L1-Control,L2-Supervisory,L3-Operations,L4-Enterprise,L5-DMZ",
+        "query": "process,control,supervisory,operations,enterprise,dmz,untrusted",
         "queryValue": "",
         "skipUrlSync": false,
         "sort": 0,
@@ -724,40 +729,35 @@
           {
             "selected": false,
             "text": "PLC",
-            "value": "PLC"
+            "value": "plc"
           },
           {
             "selected": false,
             "text": "RTU",
-            "value": "RTU"
+            "value": "rtu"
           },
           {
             "selected": false,
             "text": "HMI",
-            "value": "HMI"
+            "value": "hmi"
           },
           {
             "selected": false,
             "text": "Switch",
-            "value": "Switch"
+            "value": "switch"
           },
           {
             "selected": false,
             "text": "Router",
-            "value": "Router"
+            "value": "router"
           },
           {
             "selected": false,
             "text": "Firewall",
-            "value": "Firewall"
-          },
-          {
-            "selected": false,
-            "text": "IED",
-            "value": "IED"
+            "value": "firewall"
           }
         ],
-        "query": "PLC,RTU,HMI,Switch,Router,Firewall,IED",
+        "query": "plc,rtu,hmi,switch,router,firewall",
         "queryValue": "",
         "skipUrlSync": false,
         "sort": 0,
@@ -773,6 +773,6 @@
   "timezone": "",
   "title": "Real-time Topology Dashboard",
   "uid": "scada-realtime-topology",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }

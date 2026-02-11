@@ -1,3 +1,6 @@
+# PostgreSQL datasource for SCADA topology (uid=postgres for dashboards).
+# Default password matches docker-compose default. For production, override
+# by setting DB_PASSWORD and replacing this file or using a secret.
 apiVersion: 1
 
 datasources:
@@ -8,7 +11,7 @@ datasources:
     database: scada_topology
     user: scada_admin
     secureJsonData:
-      password: ${DB_PASSWORD}
+      password: scada_password
     jsonData:
       sslmode: disable
       maxOpenConns: 10

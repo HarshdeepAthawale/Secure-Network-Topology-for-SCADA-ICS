@@ -241,7 +241,7 @@ export class MQTTIngestProcessor {
 
   private async processNetFlow(telemetry: TelemetryData): Promise<void> {
     // Reconstitute Date objects from JSON strings for NetFlow records
-    const data = telemetry.data as Record<string, unknown>;
+    const data = telemetry.data;
     if (data.type === 'netflow' && Array.isArray(data.flows)) {
       data.flows = (data.flows as Record<string, unknown>[]).map(flow => ({
         ...flow,
@@ -321,7 +321,7 @@ export class MQTTIngestProcessor {
 
   private async processSyslog(telemetry: TelemetryData): Promise<void> {
     // Reconstitute Date objects from JSON strings for syslog messages
-    const data = telemetry.data as Record<string, unknown>;
+    const data = telemetry.data;
     if (Array.isArray(data.messages)) {
       data.messages = (data.messages as Record<string, unknown>[]).map(msg => ({
         ...msg,
