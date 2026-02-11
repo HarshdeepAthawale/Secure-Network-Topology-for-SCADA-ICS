@@ -82,7 +82,7 @@ SELECT
     WHEN floor(random()*100) < 80 THEN 4840
     ELSE 1883
   END::int,
-  (src.purdue_level::text::int * 100)::int,
+  GREATEST(1, LEAST(4094, (src.purdue_level::text::int * 100 + 1)::int)),
   CASE WHEN random() > 0.3 THEN floor(random()*1000)::int ELSE 10000 END,
   CASE WHEN random() > 0.5 THEN FLOOR(random()*50)::float ELSE FLOOR(random()*200)::float END,
   random() > 0.25,

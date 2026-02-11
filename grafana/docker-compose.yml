@@ -8,7 +8,7 @@ services:
       - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-zenbook}
       - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-piechart-panel,marcusolsson-treemap-panel
       - GF_FEATURE_TOGGLES_ENABLE=nodeGraph
       - DB_HOST=postgres
@@ -23,6 +23,9 @@ services:
       - ./alerts:/etc/grafana/provisioning/alerting
     networks:
       - scada-network
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
 
   postgres:

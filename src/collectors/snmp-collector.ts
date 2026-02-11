@@ -447,12 +447,12 @@ export class SNMPCollector extends BaseCollector {
 
   private extractString(varbinds: snmp.Varbind[], oid: string): string {
     const varbind = varbinds.find(v => v.oid === oid);
-    return varbind && varbind.value !== null ? varbind.value.toString() : '';
+    return varbind?.value !== null ? varbind.value.toString() : '';
   }
 
   private extractNumber(varbinds: snmp.Varbind[], oid: string): number {
     const varbind = varbinds.find(v => v.oid === oid);
-    return varbind && varbind.value !== null ? parseInt(varbind.value.toString(), 10) : 0;
+    return varbind?.value !== null ? parseInt(varbind.value.toString(), 10) : 0;
   }
 
   private formatMacAddress(value: Buffer | string): string {
