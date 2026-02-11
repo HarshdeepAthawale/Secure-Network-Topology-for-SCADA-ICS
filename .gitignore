@@ -9,9 +9,13 @@ dist/
 
 # Environment files
 .env
+.env.example
 .env.local
 .env.production
 .env.*.local
+
+# Grafana stack (passwords via env)
+grafana/docker-compose.yml
 
 # IDE
 .idea/
