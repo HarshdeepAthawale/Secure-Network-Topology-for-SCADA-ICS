@@ -529,9 +529,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contact & Support
 
-- **Project Lead**: [Your Name](mailto:your.email@example.com)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/scada-topology-discovery/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/scada-topology-discovery/discussions)
+- **Project Lead**: [Harshdeep Athawale](mailto:harshdeepathawale27@gmail.com)
+
 
 ## Related Projects
 
