@@ -20,6 +20,7 @@ grafana/docker-compose.yml
 # IDE
 .idea/
 .vscode/
+.cursor/
 *.swp
 *.swo
 
