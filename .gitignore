@@ -21,6 +21,7 @@ grafana/docker-compose.yml
 .idea/
 .vscode/
 .cursor/
+.cursor/plans/
 *.swp
 *.swo
 
