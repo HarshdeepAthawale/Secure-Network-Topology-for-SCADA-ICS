@@ -543,3 +543,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Security Notice**: This system is designed for authorized use in industrial environments. Ensure proper authorization before deploying in production networks. Always follow your organization's security policies and regulatory requirements.
 
 **Built for Critical Infrastructure Protection**
+
+## License
+This project is proprietary. All rights reserved.
+See the LICENSE file for details.
